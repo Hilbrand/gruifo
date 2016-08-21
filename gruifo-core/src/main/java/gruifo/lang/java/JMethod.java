@@ -1,34 +1,44 @@
 package gruifo.lang.java;
 
-import gruifo.lang.AccessType;
-
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+
+import javax.lang.model.element.Modifier;
+
+import com.squareup.javapoet.TypeName;
 
 public class JMethod {
   private String methodName;
   private final String classPath;
-  private final AccessType accessType;
-  private String returnType;
+  private final EnumSet<Modifier> modifiers;
+  private TypeName returnType;
   private final List<JParam> params = new ArrayList<>();
   private String jsDoc;
   private String genericType;
-  private boolean abstractMethod;
-  private boolean staticMethod;
 
   public JMethod(final String classPath, final String functionName,
-      final AccessType accessType) {
+      final Modifier modifier) {
     this.classPath = classPath;
     methodName = functionName;
-    this.accessType = accessType;
+    modifiers = EnumSet.of(modifier);
   }
 
   public void addParam(final JParam param) {
     params.add(param);
   }
 
-  public AccessType getAccessType() {
-    return accessType;
+  public void addModifier(final Modifier modifier) {
+    modifiers.add(modifier);
+  }
+
+  public boolean contains(final Modifier modifier) {
+    return modifiers.contains(modifier);
+  }
+
+  public EnumSet<Modifier> getModifiers() {
+    return modifiers;
+//    return modifiers.toArray(new Modifier[0]);
   }
 
   public String getClassPath() {
@@ -51,20 +61,16 @@ public class JMethod {
     return params;
   }
 
-  public String getReturn() {
+  public TypeName getReturn() {
     return returnType;
   }
 
   public boolean isAbstractMethod() {
-    return abstractMethod;
-  }
-
-  public boolean isStaticMethod() {
-    return staticMethod;
+    return modifiers.contains(Modifier.ABSTRACT);
   }
 
   public void setAbstract(final boolean abstractMethod) {
-    this.abstractMethod = abstractMethod;
+    setModifier(abstractMethod, Modifier.ABSTRACT);
   }
 
   public void setJsDoc(final String jsDoc) {
@@ -79,12 +85,20 @@ public class JMethod {
     this.methodName = methodName;
   }
 
-  public void setReturn(final String returnType) {
+  public void setReturn(final TypeName returnType) {
     this.returnType = returnType;
   }
 
   public void setStatic(final boolean staticMethod) {
-    this.staticMethod = staticMethod;
+    setModifier(staticMethod, Modifier.STATIC);
+  }
+
+  private void setModifier(final boolean add, final Modifier modifier) {
+    if (add) {
+      modifiers.add(modifier);
+    } else {
+      modifiers.remove(modifier);
+    }
   }
 
   @Override

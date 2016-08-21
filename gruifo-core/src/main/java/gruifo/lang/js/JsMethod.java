@@ -15,26 +15,28 @@
  */
 package gruifo.lang.js;
 
-import gruifo.lang.AccessType;
+import java.util.EnumSet;
+
+import javax.lang.model.element.Modifier;
 
 /**
  * Data class to store the JavaScript method data.
  */
 public class JsMethod {
 
-  private JsElement element;
-  private boolean abstractMethod;
-  private boolean staticMethod;
-  private String methodName;
   private final String packageName;
+  private final EnumSet<Modifier> modifiers = EnumSet.noneOf(Modifier.class);
+
+  private JsElement element;
+  private String methodName;
 
   public JsMethod(final String packageName, final String functionName) {
     this.packageName = packageName;
     methodName = functionName;
   }
 
-  public AccessType getAccessType() {
-    return element.getAccessType();
+  public Modifier getModifier() {
+    return element.getModifier();
   }
 
   public String getPackageName() {
@@ -50,15 +52,15 @@ public class JsMethod {
   }
 
   public boolean isAbstractMethod() {
-    return abstractMethod;
+    return modifiers.contains(Modifier.ABSTRACT);
   }
 
   public boolean isStaticMethod() {
-    return staticMethod;
+    return modifiers.contains(Modifier.ABSTRACT);
   }
 
   public void setAbstract(final boolean abstractMethod) {
-    this.abstractMethod = abstractMethod;
+    modifiers.add(Modifier.ABSTRACT);
   }
 
   public void setElement(final JsElement element) {
@@ -70,13 +72,13 @@ public class JsMethod {
   }
 
   public void setStaticMethod(final boolean staticMethod) {
-    this.staticMethod = staticMethod;
+    modifiers.add(Modifier.STATIC);
   }
 
   @Override
   public String toString() {
-    return "JsMethod [element=" + element + ", abstractMethod="
-        + abstractMethod + ", staticMethod=" + staticMethod + ", methodName="
-        + methodName + ", packageName=" + packageName + "]";
+    return "JsMethod [element=" + element + ", methodName=" + methodName
+        + ", packageName=" + packageName + ", modifers=" + modifiers.toString()
+        + "]";
   }
 }

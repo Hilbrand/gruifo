@@ -15,15 +15,15 @@
  */
 package gruifo.parser;
 
-import gruifo.lang.js.JsElement;
-import gruifo.lang.js.JsParam;
-import gruifo.lang.js.JsType;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import gruifo.lang.js.JsElement;
+import gruifo.lang.js.JsParam;
+import gruifo.lang.js.JsType;
 
 /**
  * Parses the annotations in the JavaScript doc.
@@ -157,6 +157,8 @@ public class JavaScriptDocParser {
       Pattern.compile("@([^ ]+) ?.*");
   private static final Pattern COMMENT_PATTERN =
       Pattern.compile("^ *\\* *([^@]+)");
+  private static final Pattern STRIP_COMMENT_PATTERN =
+      Pattern.compile("^ *\\\\?\\*+/?([^/]+)");
 
   private final JsTypeParser jsTypeParser = new JsTypeParser();
   private final JsDocTypedefParser typedefParser =
@@ -169,7 +171,7 @@ public class JavaScriptDocParser {
       LOG.error("Comment in file {} is empty.", fileName);
       return null;
     }
-    final String lines[] = comment.split("\\r?\\n");
+    final String lines[] = splitOnNewline(comment);
     for (int i = 0; i < lines.length; i++) {
       final String line = lines[i];
       final String annotation = findAnnotation(line);
@@ -252,8 +254,20 @@ public class JavaScriptDocParser {
     return doc;
   }
 
+  private String[] splitOnNewline(final String comment) {
+    return comment.split("\\r?\\n");
+  }
+
   private String convertComment(final String comment) {
-    return comment;
+    final String lines[] = splitOnNewline(comment);
+    final StringBuilder builder = new StringBuilder();
+    for (final String line : lines) {
+      final Matcher matcher = STRIP_COMMENT_PATTERN.matcher(line);
+      if (matcher.find()) {
+        builder.append(matcher.group(1)).append('\n');
+      }
+    }
+    return builder.toString();
   }
 
   private String findAnnotation(final String line) {

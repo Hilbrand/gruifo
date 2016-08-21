@@ -15,14 +15,14 @@
  */
 package gruifo;
 
-import gruifo.output.FilePrinter;
-import gruifo.output.jsinterop.JsInteropPrinter;
-import gruifo.output.jsni.JSNIPrinter;
-import gruifo.output.jsni.TypeMapper;
-
 import java.io.IOException;
 
 import org.apache.commons.cli.ParseException;
+
+import gruifo.output.FilePrinter;
+import gruifo.output.jsinterop.JsInteropPrinter;
+import gruifo.output.jsni.JSNIBuilder;
+import gruifo.output.jsni.TypeMapper;
 
 /**
  * Main class.
@@ -52,7 +52,7 @@ public final class GruifoCli {
     if (cmdOptions.isJSInterop()) {
       fp = new JsInteropPrinter();
     } else {
-      fp = new JSNIPrinter();
+      fp = new JSNIBuilder();
     }
     return fp;
   }

@@ -15,15 +15,6 @@
  */
 package gruifo;
 
-import gruifo.lang.js.JsElement;
-import gruifo.lang.js.JsFile;
-import gruifo.lang.js.JsMethod;
-import gruifo.lang.js.JsParam;
-import gruifo.output.FilePrinter;
-import gruifo.output.jsinterop.JsInteropPrinter;
-import gruifo.output.jsni.JSNIPrinter;
-import gruifo.parser.JavaScriptFileParser;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -41,6 +32,15 @@ import org.mozilla.javascript.Parser;
 import org.mozilla.javascript.ast.AstRoot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import gruifo.lang.js.JsElement;
+import gruifo.lang.js.JsFile;
+import gruifo.lang.js.JsMethod;
+import gruifo.lang.js.JsParam;
+import gruifo.output.FilePrinter;
+import gruifo.output.jsinterop.JsInteropPrinter;
+import gruifo.output.jsni.JSNIBuilder;
+import gruifo.parser.JavaScriptFileParser;
 
 /**
  * Control flow from parsing to generating output files.
@@ -65,7 +65,7 @@ public class Controller {
     if (outputType == OutputType.JSI) {
       fp = new JsInteropPrinter();
     } else if (outputType == OutputType.JSNI) {
-      fp = new JSNIPrinter();
+      fp = new JSNIBuilder();
     } else {
       throw new RuntimeException("Output type '" + outputType
           + "' not supported");

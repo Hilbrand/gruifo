@@ -15,25 +15,26 @@
  */
 package gruifo.output.jsni;
 
+import com.squareup.javapoet.TypeSpec.Builder;
+
 import gruifo.lang.java.JClass;
 import gruifo.lang.java.JParam;
 import gruifo.output.PrintUtil;
 
 /**
- * Prints Field members.
+ * Builds Field members.
  */
-public class JSNIFieldPrinter {
+public class JSNIFieldBuilder {
 
-  public void printFields(final StringBuffer buffer, final int indent,
-      final JClass jFile) {
-    if (!jFile.isInterface()) {
-      for (final JParam field : jFile.getFields()) {
-        printGetter(buffer, indent, field);
-        if (!field.isFinal()) {
-          printSetter(buffer, indent, field);
-        }
-      }
-    }
+  public void buildFields(final Builder builder, final JClass jFile) {
+//    if (!jFile.isInterface()) {
+//      for (final JParam field : jFile.getFields()) {
+//        printGetter(buffer, indent, field);
+//        if (!field.isFinal()) {
+//          printSetter(buffer, indent, field);
+//        }
+//      }
+//    }
   }
 
   private void printGetter(final StringBuffer buffer, final int indent,
@@ -64,12 +65,13 @@ public class JSNIFieldPrinter {
   }
 
   private String fixMultiTypeField(final JParam field) {
-    final int genericIdx = field.getType().indexOf('<');
-    final String subString = genericIdx < 0 ? field.getType()
-        : field.getType().substring(0, genericIdx);
-    final int dotIdx = subString.lastIndexOf('.');
-    return  PrintUtil.firstCharUpper(
-        dotIdx < 0 ? subString : subString.substring(dotIdx + 1));
+//    final int genericIdx = field.getType().indexOf('<');
+//    final String subString = genericIdx < 0 ? field.getType()
+//        : field.getType().substring(0, genericIdx);
+//    final int dotIdx = subString.lastIndexOf('.');
+//    return  PrintUtil.firstCharUpper(
+//        dotIdx < 0 ? subString : subString.substring(dotIdx + 1));
+    return null;
   }
 
   private void printSetter(final StringBuffer buffer, final int indent,
@@ -127,5 +129,4 @@ public class JSNIFieldPrinter {
       buffer.append("']");
     }
   }
-
 }

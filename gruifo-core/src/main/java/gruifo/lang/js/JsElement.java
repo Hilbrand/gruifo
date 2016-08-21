@@ -15,11 +15,14 @@
  */
 package gruifo.lang.js;
 
-import gruifo.lang.AccessType;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.lang.model.element.Modifier;
+
+/**
+ * Represents JavaScript element.
+ */
 public class JsElement {
 
   public static enum ElementType {
@@ -33,7 +36,7 @@ public class JsElement {
     TYPEDEF;
   }
 
-  private AccessType accessType = AccessType.PUBLIC;
+  private Modifier modifier = Modifier.PUBLIC;
   private ElementType elementType = ElementType.METHOD;
   private boolean classDesc;
   private String jsDoc;
@@ -56,8 +59,8 @@ public class JsElement {
     return jsDoc;
   }
 
-  public AccessType getAccessType() {
-    return accessType;
+  public Modifier getModifier() {
+    return modifier;
   }
 
   public JsType getDefine() {
@@ -79,6 +82,11 @@ public class JsElement {
   public List<JsType> getImplements() {
     return implementsTypes;
   }
+
+  public JsParam getParam(final int idx) {
+    return params.get(idx);
+  }
+
   public List<JsParam> getParams() {
     return params;
   }
@@ -132,11 +140,11 @@ public class JsElement {
   }
 
   public boolean isPrivate() {
-    return accessType == AccessType.PRIVATE;
+    return modifier == Modifier.PRIVATE;
   }
 
   public boolean isProtected() {
-    return accessType == AccessType.PROTECTED;
+    return modifier == Modifier.PROTECTED;
   }
 
   public boolean isTypeDef() {
@@ -190,11 +198,11 @@ public class JsElement {
   }
 
   public void setPrivate() {
-    accessType = AccessType.PRIVATE;
+    modifier = Modifier.PRIVATE;
   }
 
   public void setProtected() {
-    accessType = AccessType.PROTECTED;
+    modifier = Modifier.PROTECTED;
   }
 
   public void setReturn(final JsType _return) {
@@ -212,7 +220,7 @@ public class JsElement {
 
   @Override
   public String toString() {
-    return "JsElement [accessType=" + accessType + ", elementType="
+    return "JsElement [accessType=" + modifier + ", elementType="
         + elementType + ", classDesc=" + classDesc + ", _extends="
         + extendsType + ", params=" + params + ", typeDef=" + typeDef
         + ", type=" + type + ", _return=" + returnType + ", override="

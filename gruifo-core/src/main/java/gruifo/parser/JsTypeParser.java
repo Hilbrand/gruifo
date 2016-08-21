@@ -15,11 +15,11 @@
  */
 package gruifo.parser;
 
-import gruifo.lang.js.JsType;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import gruifo.lang.js.JsType;
 
 /**
  * Parse the types of @param, @return and @type elements.
@@ -110,7 +110,7 @@ public class JsTypeParser {
           idx.incrementAndGet();
           subTypes = typeParser(rawType, chars, idx);
           endPos = idx.get();
-        } else if (chars[i+1] == '.' && (chars[i+2] == '.')) {
+        } else if (chars[i+1] == '.' && chars[i+2] == '.') {
           varArgs = true;
           idx.addAndGet(2); // skip ...
           startPos = i + 3;
@@ -126,7 +126,7 @@ public class JsTypeParser {
         break;
       case '<':
         // should not happen...
-        break;
+        throw new IllegalArgumentException("Unexpected '<' in " + rawType);
       case '>':
         decreaseDepth = true;
         newType = true;
@@ -158,7 +158,7 @@ public class JsTypeParser {
         nameEndPos = endPos;
       }
       boolean lastToken = idx.get() == chars.length - 1;
-      if ((!inFunction && newType) || lastToken) {
+      if (!inFunction && newType || lastToken) {
         final String sType = rawType.substring(startPos, endPos + 1);
         final String name = rawType.substring(startPos, nameEndPos + 1);
         boolean withNull = false;
@@ -171,7 +171,7 @@ public class JsTypeParser {
           jsType.setNotNull(notNull);
           jsType.setNull(canNull);
           jsType.setOptional(optional);
-          jsType.addSubTypes(subTypes);
+          jsType.addGenericTypes(subTypes);
           choices.add(jsType);
         }
         lastToken = idx.get() == chars.length - 1;

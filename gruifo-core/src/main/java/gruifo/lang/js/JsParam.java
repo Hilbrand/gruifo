@@ -15,6 +15,9 @@
  */
 package gruifo.lang.js;
 
+/**
+ * Data class representing a JavaScript parameter.
+ */
 public class JsParam {
   private JsType type;
   private String name;

@@ -39,14 +39,14 @@ import gruifo.lang.js.JsType;
 /**
  * Transforms JavaScript into Java.
  */
-class Transformer {
+class Transformer2 {
 
   private static final Logger LOG = LoggerFactory.getLogger(Transformer.class);
   private static final TypeMapper TYPE_MAPPER = TypeMapper.INSTANCE;
 
   private final Set<String> ignoreMethods = new HashSet<>();
 
-  public Transformer() {
+  public Transformer2() {
     ignoreMethods.add("toString");
   }
 

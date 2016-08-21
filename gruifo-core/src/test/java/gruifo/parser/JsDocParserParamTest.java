@@ -22,8 +22,12 @@ import java.io.IOException;
 
 import org.junit.Test;
 
+import gruifo.lang.js.JsParam;
+import gruifo.lang.js.JsType;
+
 /**
  * Test class for {@link JavaScriptDocParser} for param annotation.
+ * Test also {@link JsTypeParser}.
  */
 public class JsDocParserParamTest extends JsDocParserTestBase {
 
@@ -32,18 +36,94 @@ public class JsDocParserParamTest extends JsDocParserTestBase {
   }
 
   @Test
-  public void testParam() {
-    assertEquals("params size", 17, jsElement.getParams().size());
-    assertEquals("params 0 name",
-        "options", jsElement.getParams().get(0).getName());
-    assertEquals("params 0 type", "nl.Options",
-        jsElement.getParams().get(0).getType().getName());
-    assertTrue("params 1",
-        jsElement.getParams().get(1).getType().isFunction());
+  public void testNumberOfParams() {
+    assertEquals("params size", 22, jsElement.getParams().size());
   }
 
   @Test
-  public void testObjectGeneric() {
+  public void testParam() {
+    assertEquals("param name", "options", getParamAtRow(0).getName());
+    assertEquals("param is object", "nl.Options", getParamNameAtRow(0));
+    assertEquals("param is *", "*", getParamNameAtRow(1));
+    assertEquals("param is ?", "", getParamNameAtRow(2));
+  }
+
+  @Test
+  public void testFunction() {
+    assertTrue("param is function", getParamTypeAtRow(3).isFunction());
+    assertTrue("param is listener function", getParamTypeAtRow(4).isFunction());
+  }
+
+  @Test
+  public void testArray() {
+    assertEquals("param Array", "Array", getParamNameAtRow(5));
+    assertArray1Generic(6, "T");
+    assertArray1Generic(7, "number");
+    assertArray1Generic(8, "nl.SomeObject");
+    assertArray1Generic(9, "nl.SomeObject");
+    assertEquals("2dn argument of Array", "number",
+        getParamTypeAtRow(9).getTypeList().get(1).getName());
+  }
+
+  private void assertArray1Generic(final int idx, final String genericType) {
+    assertEquals("param Array", "Array", getParamNameAtRow(idx));
+    assertEquals("argument of Array", genericType,
+        getParamAtRow(idx).getType().getTypeList().get(0).getName());
+  }
+
+  @Test
+  public void testOptional() {
+    assertOptional(10, "nl.Object", "nl.Object");
+    assertOptional(11, "Array", "Array.<T>");
+    assertOptional(12, "S", "S");
+  }
+
+  private void assertOptional(final int idx, final String type,
+      final String rawType) {
+    assertTrue("Type should be optional",
+        getParamTypeAtRow(idx).isOptional());
+    assertEquals("Type test of optional param", type,
+        getParamNameAtRow(idx));
+    assertEquals("Raw type test of optional param", rawType,
+        getParamTypeAtRow(idx).getRawType());
+  }
+
+  public void testState() {
+    assertState(13, "nl.StateNull");
+    assertTrue("Type should be can null", getParamTypeAtRow(13).isCanNull());
+    assertState(14, "nl.StateNotNull");
+    assertTrue("Type should be not null", getParamTypeAtRow(14).isNotNull());
+  }
+
+  private void assertState(final int idx, final String type) {
+    assertEquals("Type test of stateparam", type,
+        getParamNameAtRow(idx));
+    assertEquals("Raw type test of state param", type,
+        getParamTypeAtRow(idx).getRawType());
+  }
+
+  @Test
+  public void testVarArgs() {
+    assertTrue("Param should be var args", getParamTypeAtRow(15).isVarArgs());
+    assertEquals("Name should be without dots", "nl.Varargs",
+        getParamNameAtRow(15));
+    assertEquals("Raw type should be without dots", "nl.Varargs",
+        getParamTypeAtRow(15).getRawType());
+  }
+
+  @Test
+  public void test2LineParam() {
+    assertEquals("Param multi line should have 2 params", 3,
+        getParamTypeAtRow(16).getChoices().size());
+  }
+
+  @Test
+  public void testGenericParams() {
+    assertEquals("1st type", getParamNameAtRow(17), "Object");
+    assertEquals("2st type", getParamTypeAtRow(17).getGenericType(0), "Object");
+
+//    assertEquals("", );
+
     assertEquals("params size", 2,
         jsElement.getParams().get(14).getType().getTypeList().size());
     assertEquals("params size", "string",
@@ -52,43 +132,15 @@ public class JsDocParserParamTest extends JsDocParserTestBase {
         jsElement.getParams().get(14).getType().getTypeList().get(1).getName());
   }
 
-  @Test
-  public void testVarArgs() {
-    assertTrue("params 1 should be var args",
-        jsElement.getParams().get(8).getType().isVarArgs());
-    assertEquals("Name should be without dots", "nl.Varargs",
-        jsElement.getParams().get(8).getType().getName());
+  private String getParamNameAtRow(final int idx) {
+    return getParamTypeAtRow(idx).getName();
   }
 
-  @Test
-  public void test2LineParam() {
-    assertEquals("params size next line not found", 3,
-        jsElement.getParams().get(16).getType().getChoices().size());
+  private JsType getParamTypeAtRow(final int idx) {
+    return getParamAtRow(idx).getType();
   }
 
-  @Test
-  public void testOptional() {
-    assertTrue("Type should be optional",
-        jsElement.getParams().get(4).getType().isOptional());
-    assertEquals("Type should be normal object", "nl.Object",
-        jsElement.getParams().get(4).getType().getName());
-    assertEquals("Type should be Single Object", "S",
-        jsElement.getParams().get(9).getType().getName());
-  }
-
-  @Test
-  public void testFunctionDetection() {
-    assertTrue("params 1 should be function",
-        jsElement.getParams().get(1).getType().isFunction());
-    assertTrue("params 11 should be function",
-        jsElement.getParams().get(11).getType().isFunction());
-  }
-
-  @Test
-  public void testReturn() {
-    assertEquals("return type 1", "Array.<number>",
-        jsElement.getReturn().getRawType());
-    assertEquals("return type 1", "number",
-        jsElement.getReturn().getTypeList().get(0).getName());
+  private JsParam getParamAtRow(final int idx) {
+    return jsElement.getParam(idx);
   }
 }

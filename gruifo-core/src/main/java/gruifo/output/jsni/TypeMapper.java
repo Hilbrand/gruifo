@@ -22,52 +22,56 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.TypeName;
+
 public final class TypeMapper {
-  private static final String GWT_JSNI_PACKAGE = "com.google.gwt.core.client.";
-  static final String GWT_JAVA_SCRIPT_OBJECT =
-      GWT_JSNI_PACKAGE + "JavaScriptObject";
+  private static final String DOM_CLIENT = "com.google.gwt.dom.client";
+  private static final String CORE_CLIENT = "com.google.gwt.core.client";
+  static final TypeName GWT_JAVA_SCRIPT_OBJECT =
+      ClassName.get(CORE_CLIENT, "JavaScriptObject");
 
   public static final TypeMapper INSTANCE = new TypeMapper();
 
-  private final Map<String, String> mapper = new HashMap<>();
-  private final Map<String, String> primitiveMapper = new HashMap<>();
-  private final Map<String, String> genericMapper = new HashMap<>();
+  private final Map<String, TypeName> mapper = new HashMap<>();
+  private final Map<String, TypeName> primitiveMapper = new HashMap<>();
+  private final Map<String, TypeName> genericMapper = new HashMap<>();
   private final Set<String> ignores = new HashSet<>();
   private final Map<String, String> replaceTypes = new HashMap<>();
 
   private TypeMapper() {
-    primitiveMapper.put("void", "void");
-    primitiveMapper.put("string", "String");
-    primitiveMapper.put("int", "int");
-    primitiveMapper.put("double", "double");
-    primitiveMapper.put("float", "float");
-    primitiveMapper.put("boolean", "boolean");
-    primitiveMapper.put("number", "double");
+    primitiveMapper.put("void", TypeName.VOID);
+    primitiveMapper.put("string", TypeName.get(String.class));
+    primitiveMapper.put("int", TypeName.INT);
+    primitiveMapper.put("double", TypeName.DOUBLE);
+    primitiveMapper.put("float", TypeName.FLOAT);
+    primitiveMapper.put("boolean", TypeName.BOOLEAN);
+    primitiveMapper.put("number", TypeName.DOUBLE);
 
-    genericMapper.put("void", "Void");
-    genericMapper.put("string", "String");
-    genericMapper.put("int", "Integer");
-    genericMapper.put("double", "Double");
-    genericMapper.put("float", "Float");
-    genericMapper.put("boolean", "Boolean");
-    genericMapper.put("number", "Double");
+    genericMapper.put("void", TypeName.VOID.box());
+    genericMapper.put("string", TypeName.get(String.class));
+    genericMapper.put("int", TypeName.INT.box());
+    genericMapper.put("double", TypeName.DOUBLE.box());
+    genericMapper.put("float", TypeName.FLOAT.box());
+    genericMapper.put("boolean", TypeName.BOOLEAN.box());
+    genericMapper.put("number", TypeName.DOUBLE.box());
 
     mapper.put("*", GWT_JAVA_SCRIPT_OBJECT);
     mapper.put("object", GWT_JAVA_SCRIPT_OBJECT);
     mapper.put("Object", GWT_JAVA_SCRIPT_OBJECT);
     mapper.put("undefined", GWT_JAVA_SCRIPT_OBJECT);
     // JSNI specific
-    mapper.put("HTMLDocument", "com.google.gwt.dom.client.Node");
-    mapper.put("Document", "com.google.gwt.dom.client.Document");
-    mapper.put("Node", "com.google.gwt.dom.client.Node");
-    mapper.put("Element", "com.google.gwt.dom.client.Element");
-    mapper.put("Event", "com.google.gwt.dom.client.NativeEvent");
-    mapper.put("Touch", "com.google.gwt.dom.client.Touch");
+    mapper.put("HTMLDocument", ClassName.get(DOM_CLIENT, "Node"));
+    mapper.put("Document", ClassName.get(DOM_CLIENT, "Document"));
+    mapper.put("Node", ClassName.get(DOM_CLIENT, "Node"));
+    mapper.put("Element", ClassName.get(DOM_CLIENT, "Element"));
+    mapper.put("Event", ClassName.get(DOM_CLIENT, "NativeEvent"));
+    mapper.put("Touch", ClassName.get(DOM_CLIENT, "Touch"));
 
-    mapper.put("Array", "com.google.gwt.core.client.JsArray");
-    mapper.put("Array.<*>", "com.google.gwt.core.client.JsArray");
-    mapper.put("Array.<number>", "com.google.gwt.core.client.JsArrayNumber");
-    mapper.put("Array.<string>", "com.google.gwt.core.client.JsArrayString");
+    mapper.put("Array", ClassName.get(CORE_CLIENT, "JsArray"));
+    mapper.put("Array.<*>", ClassName.get(CORE_CLIENT, "JsArray"));
+    mapper.put("Array.<number>", ClassName.get(CORE_CLIENT, "JsArrayNumber"));
+    mapper.put("Array.<string>", ClassName.get(CORE_CLIENT, "JsArrayString"));
   }
 
   public void addMappings(final Properties props) {
@@ -78,7 +82,8 @@ public final class TypeMapper {
         replaceTypes.put(((String) prop.getKey()).substring(1),
             (String) prop.getValue());
       } else {
-        mapper.put((String) prop.getKey(), (String) prop.getValue());
+        mapper.put((String) prop.getKey(),
+            string2Class((String) prop.getValue()));
       }
     }
   }
@@ -100,9 +105,10 @@ public final class TypeMapper {
     return primitiveMapper.containsKey(typeToCheck);
   }
 
-  public String mapType(final String typeToMap, final boolean generic) {
-    return mapOtherType(generic
-        ? mapGenericType(typeToMap) : mapPrimitiveType(typeToMap));
+  public TypeName mapType(final String typeToMap, final boolean generic) {
+    return generic ?
+        genericMapper.containsKey(typeToMap) ? mapGenericType(typeToMap)
+            : mapOtherType(typeToMap): mapType(typeToMap);
   }
 
   /**
@@ -111,31 +117,42 @@ public final class TypeMapper {
    * @param typeToMap
    * @return
    */
-  public String mapType(final String typeToMap) {
-    return mapOtherType(mapPrimitiveType(typeToMap));
-  }
-
-  private String mapOtherType(final String typeToMap) {
-    return mapper.containsKey(typeToMap)
-        ? mapper.get(typeToMap) : typeToMap;
-  }
-
-  private String mapGenericType(final String typeToMap) {
-    return genericMapper.containsKey(typeToMap) ?
-        genericMapper.get(typeToMap) : typeToMap;
-  }
-
-  private String mapPrimitiveType(final String typeToMap) {
+  public TypeName mapType(final String typeToMap) {
     return primitiveMapper.containsKey(typeToMap)
-        ? primitiveMapper.get(typeToMap) : typeToMap;
+        ? mapPrimitiveType(typeToMap) : mapOtherType(typeToMap);
   }
 
-  public String replaceType(final String fullClassName, final String methodName,
-      final String name) {
-    return replaceTypes.get(fullClassName + '$' + methodName + '$' + name);
+  private TypeName mapOtherType(final String typeToMap) {
+    return mapper.containsKey(typeToMap)
+        ? mapper.get(typeToMap) : string2Class(typeToMap);
   }
 
-  public String replaceType(final String fullClassName, final String name) {
-    return replaceTypes.get(fullClassName + '$' + name);
+  private TypeName mapGenericType(final String typeToMap) {
+    return genericMapper.containsKey(typeToMap)
+        ? genericMapper.get(typeToMap) : string2Class(typeToMap);
+  }
+
+  private TypeName mapPrimitiveType(final String typeToMap) {
+    return primitiveMapper.containsKey(typeToMap)
+        ? primitiveMapper.get(typeToMap) : string2Class(typeToMap);
+  }
+
+  public TypeName replaceType(final String fullClassName,
+      final String methodName, final String name) {
+    return string2Class(
+        replaceTypes.get(fullClassName + '$' + methodName + '$' + name));
+  }
+
+  public TypeName replaceType(final String fullClassName, final String name) {
+    return string2Class(replaceTypes.get(fullClassName + '$' + name));
+  }
+
+  private TypeName string2Class(final String typeToMap) {
+    if (typeToMap == null) {
+      return null;
+    }
+    final int idx = typeToMap.lastIndexOf('.');
+    return ClassName.get(typeToMap.substring(0, idx),
+        typeToMap.substring(idx + 1));
   }
 }

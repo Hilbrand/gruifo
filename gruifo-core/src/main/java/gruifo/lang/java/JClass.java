@@ -16,9 +16,15 @@
 package gruifo.lang.java;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import javax.lang.model.element.Modifier;
+
+import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeVariableName;
 
 /**
  * Data class containing the transformed JavaScript class as a Java class.
@@ -53,19 +59,20 @@ public class JClass {
   private final List<EnumValue> enumValues = new ArrayList<>();
   private String headerComment = "";
   private final List<JClass> innerJFil = new ArrayList<>();
-  private boolean staticClass;
   private String classDescription;
 
   private final List<JMethod> constructors = new ArrayList<>();
-  private final List<String> implementsTypes = new ArrayList<>();
-  private String extendsType;
-  private String classGeneric;
+  private final List<TypeVariableName> typeVariables = new ArrayList<>();
+  private final List<TypeName> superinterfaces = new ArrayList<>();
+  private TypeName superClass;
   private boolean dataClass;
   private boolean _interface;
+  private final EnumSet<Modifier> modifiers = EnumSet.noneOf(Modifier.class);
 
   public JClass(final String packageName, final String className) {
     this.packageName = packageName;
     this.classOrInteraceName = className;
+    modifiers.add(Modifier.PUBLIC);
   }
 
   public void addConstructor(final JMethod constructor) {
@@ -77,31 +84,28 @@ public class JClass {
     enumValues.add(new EnumValue(name, value, jsDoc));
   }
 
-  public JParam addField(final String name, final String type) {
+  public JParam addField(final String name, final TypeName type) {
     final JParam jParam = new JParam(name, type);
     fields.add(jParam);
     return jParam;
   }
 
-  public void addImplements(final String implementsType) {
-    implementsTypes.add(implementsType);
+  public void addSuperinterface(final TypeName implementsType) {
+    superinterfaces.add(implementsType);
   }
 
   public void addInnerJFile(final JClass JClass) {
-    staticClass = true;
+    setStatic(true);
     innerJFil.add(JClass);
   }
 
   public void addMethod(final JMethod method) {
     methods.add(method);
+    modifiers.addAll(method.getModifiers());
   }
 
   public String getClassDescription() {
     return classDescription;
-  }
-
-  public String getClassGeneric() {
-    return classGeneric;
   }
 
   public String getClassOrInterfaceName() {
@@ -116,10 +120,6 @@ public class JClass {
     return enumValues;
   }
 
-  public String getExtends() {
-    return extendsType;
-  }
-
   public List<JParam> getFields() {
     return fields;
   }
@@ -130,10 +130,6 @@ public class JClass {
 
   public String getHeaderComment() {
     return headerComment;
-  }
-
-  public List<String> getImplements() {
-    return implementsTypes;
   }
 
   public Set<String> getImports() {
@@ -148,8 +144,24 @@ public class JClass {
     return methods;
   }
 
+  public Modifier[] getModifiers() {
+    return modifiers.toArray(new Modifier[0]);
+  }
+
   public String getPackageName() {
     return packageName;
+  }
+
+  public TypeName getSuperClass() {
+    return superClass;
+  }
+
+  public Iterable<? extends TypeName> getSuperinterfaces() {
+    return superinterfaces;
+  }
+
+  public List<TypeVariableName> getTypeVariables() {
+    return typeVariables;
   }
 
   public boolean hasAbstractMethods() {
@@ -170,24 +182,16 @@ public class JClass {
   }
 
   public boolean isStatic() {
-    return staticClass;
+    return modifiers.contains(Modifier.STATIC);
   }
 
   public void setClassDescription(final String classDescription) {
     this.classDescription = classDescription;
   }
 
-  public void setClassGeneric(final String classGeneric) {
-    this.classGeneric = classGeneric;
-  }
-
   // true if not a @class annotation but a @typdef annotation
   public void setDataClass(final boolean dataClass) {
     this.dataClass = dataClass;
-  }
-
-  public void setExtends(final String extendsType) {
-    this.extendsType = extendsType;
   }
 
   public void setHeaderComment(final String headerComment) {
@@ -198,8 +202,16 @@ public class JClass {
     this._interface = _interface;
   }
 
+  public void setSuperclass(final TypeName superClass) {
+    this.superClass = superClass;
+  }
+
   public void setStatic(final boolean staticClass) {
-    this.staticClass = staticClass;
+    if (staticClass) {
+      modifiers.add(Modifier.STATIC);
+    } else {
+      modifiers.remove(Modifier.STATIC);
+    }
   }
 
   @Override

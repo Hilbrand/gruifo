@@ -1,22 +1,34 @@
 /**
- * This is a test comment.
- * @param {nl.Options} options standard parameter.
- * @param {function(this: S, nl.Param1, nl.Param2): T} function function parameter 
- * @param {Array.<*>} arr Array.
- * @param {Array.<T>=} opt_array Array.
- * @param {nl.Object=} opt_object object.
- * @param {Object.<Object.<string, nl.Attribution>, string>} attributions.
- * @param {?nl.State} stateNull state of null parameter.
- * @param {!nl.State} stateNonNull state not null parameter.
- * @param {...nl.Varargs} var_args variable arguments parameter.
- * @param {S=} opt_this .
- * @param {ol.geom.Geometry|Object.<string, *>=} opt_geometryOrProperties
- * @param {function(?): ?} listener The listener function.
- * @param {*} any any type
- * @param {?} anyNull any type, no type checking
- * @param {Object.<string, *>} string_objects
- * @param {Object.<string, string|number>} params parameters.
- * @param {nl.some.One|Array.<nl.some.One>|nl.some.Two|undefined}
- *    nextLine param on next Line
- * @return {Array.<number>} Resolutions.
+ * Object parameters:
+ *   @param {nl.Options} options standard parameter.
+ *   @param {*} any any type
+ *   @param {?} anyNull any type, no type checking
+ * Functions parameters:
+ *   @param {function(this: S, nl.Param1, nl.Param2): T} function function parameter
+ *   @param {function(?): ?} listener The listener function.
+ * Arrays parameters:
+ *   @param {Array.<*>} arr Array.
+ *   @param {Array.<T>} generic_array Array.
+ *   @param {Array.<number>} number_array Array.
+ *   @param {Array.<nl.SomeObject>} some_array Array.
+ *   @param {Array.<nl.SomeObject, number>} multi_params_array Array.
+ * Optional parameters:
+ *   @param {nl.Object=} opt_object object.
+ *   @param {Array.<T>=} some_array Array.
+ *   @param {S=} opt_this .
+ * State parameters:
+ *   @param {?nl.StateNull} stateNull state of null parameter.
+ *   @param {!nl.StateNotNull} stateNonNull state not null parameter.
+ * Variable arguments parameter:
+ *   @param {...nl.Varargs} var_args variable arguments parameter.
+ * Multiline parameter:
+ *   @param {nl.some.One|Array.<nl.some.One>|nl.some.Two|undefined}
+ *    nextLine param on next Line 
+ * Generic parameter:
+ *   @param {Object.<Object2.<string, nl.Attribution>, string>} attributions.
+ *   @param {Object.<string, *>} string_objects
+ * Optional generic parameters:
+ *   @param {ol.geom.Geometry|Object.<string, *>=} opt_geometryOrProperties
+ *   @param {Object.<string, string|number>} params parameters.
+ *   @param {Object.<undefined|string, string|number|undefined>} params parameters.
  */

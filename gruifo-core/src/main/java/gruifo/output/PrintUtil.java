@@ -22,7 +22,7 @@ package gruifo.output;
 public final class PrintUtil {
 
   private static final String NL_S = "\n";
-  private static final char NL = '\n';
+  public static final char NL = '\n';
 
   private PrintUtil() {
     // util

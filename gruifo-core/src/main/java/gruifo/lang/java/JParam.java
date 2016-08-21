@@ -15,16 +15,18 @@
  */
 package gruifo.lang.java;
 
+import com.squareup.javapoet.TypeName;
+
 public class JParam {
 
-  private String type;
+  private TypeName type;
   private final String name;
   private boolean multiField;
   private boolean _static;
   private boolean _final;
   private String javaDoc;
 
-  public JParam(final String name, final String type) {
+  public JParam(final String name, final TypeName type) {
     this.name = name;
     this.type = type;
   }
@@ -37,7 +39,7 @@ public class JParam {
     return name;
   }
 
-  public String getType() {
+  public TypeName getType() {
     return type;
   }
 
@@ -69,7 +71,7 @@ public class JParam {
     this._static = _static;
   }
 
-  public void setType(final String type) {
+  public void setType(final TypeName type) {
     this.type = type;
   }
 }

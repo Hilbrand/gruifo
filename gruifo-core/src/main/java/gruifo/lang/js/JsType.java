@@ -18,25 +18,28 @@ package gruifo.lang.js;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Data class representing a type as specified in the JsDoc.
+ */
 public class JsType {
 
-  private boolean _function;
-  private String name;
   private final List<JsType> choices = new ArrayList<>();
   private final List<JsType> typeList = new ArrayList<>();
+  private final String name;
+  private final String rawType;
+  private boolean _function;
   private boolean optional;
   private boolean notNull;
   private boolean canNull;
   private boolean varArgs;
-  private final String rawType;
-
-  public JsType(final String name, final String rawType) {
-    this(rawType);
-    this.name = name;
-  }
 
   public JsType(final String rawType) {
+    this(rawType, null);
+  }
+
+  public JsType(final String name, final String rawType) {
     this.rawType = rawType;
+    this.name = name;
   }
 
   public String getName() {
@@ -51,18 +54,26 @@ public class JsType {
     this.choices.addAll(choices);
   }
 
+  public JsType getChoice(final int idx) {
+    return choices.get(idx);
+  }
+
   public List<JsType> getChoices() {
     return choices;
   }
 
-  public void addSubType(final JsType type) {
+  public void addGenericType(final JsType type) {
     typeList.add(type);
   }
 
-  public void addSubTypes(final List<JsType> types) {
+  public void addGenericTypes(final List<JsType> types) {
     if (types != null) {
       typeList.addAll(types);
     }
+  }
+
+  public JsType getGenericType(final int idx) {
+    return typeList.get(idx);
   }
 
   public boolean isGeneric() {
