@@ -22,6 +22,8 @@ import java.io.IOException;
 
 import org.junit.Test;
 
+import gruifo.lang.js.JsType;
+
 /**
  * Test class for {@link JavaScriptDocParser} for misc annotations.
  */
@@ -41,17 +43,19 @@ public class JsDocParserMiscTest extends JsDocParserTestBase {
 
   @Test
   public void testExtends() {
-    assertEquals("extends", "nl.Object", jsElement.getExtends().getName());
+    assertEquals("extends", "nl.Object",
+        ((JsType) jsElement.getExtends()).getName());
   }
 
   @Test
   public void testImplements() {
     assertEquals("implements", "nl.Object2",
-        jsElement.getImplements().get(0).getName());
+        ((JsType) jsElement.getImplements().get(0)).getName());
   }
 
   @Test
   public void testReturn() {
-    assertEquals("return type 1", "nl.Object", jsElement.getReturn().getName());
+    assertEquals("return type 1", "nl.Object",
+        ((JsType) jsElement.getReturn()).getName());
   }
 }

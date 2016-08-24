@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import gruifo.lang.js.JsElement;
 import gruifo.lang.js.JsParam;
-import gruifo.lang.js.JsType;
+import gruifo.lang.js.JsTypeObject;
 
 /**
  * Parses the annotations in the JavaScript doc.
@@ -324,7 +324,7 @@ public class JavaScriptDocParser {
     return matcher.find() ? matcher.group(1).trim() : "";
   }
 
-  private JsType parseType(final String line, final String fileName) {
+  private JsTypeObject parseType(final String line, final String fileName) {
     final Pattern pattern = Pattern.compile("\\{([^\\}]+)\\}");
     final Matcher matcher = pattern.matcher(line);
     return matcher.find() ? jsTypeParser.parseType(matcher.group(1).trim()) : null;

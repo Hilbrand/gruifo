@@ -17,11 +17,11 @@ public class JMethod {
   private String jsDoc;
   private String genericType;
 
-  public JMethod(final String classPath, final String functionName,
-      final Modifier modifier) {
+  public JMethod(final String classPath, final String methodName,
+      final EnumSet<Modifier> modifiers) {
     this.classPath = classPath;
-    methodName = functionName;
-    modifiers = EnumSet.of(modifier);
+    this.methodName = methodName;
+    this.modifiers = EnumSet.copyOf(modifiers);
   }
 
   public void addParam(final JParam param) {

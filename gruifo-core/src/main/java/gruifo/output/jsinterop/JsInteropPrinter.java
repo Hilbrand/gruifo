@@ -15,13 +15,13 @@
  */
 package gruifo.output.jsinterop;
 
-import gruifo.lang.java.JClass;
-import gruifo.lang.js.JsFile;
-import gruifo.output.FilePrinter;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
+
+import gruifo.lang.java.JClass;
+import gruifo.lang.js.JsFile;
+import gruifo.output.FilePrinter;
 // https://docs.google.com/document/d/10fmlEYIHcyead_4R1S5wKGs1t2I7Fnp_PaNaa7XTEk0/edit?pli=1
 public class JsInteropPrinter implements FilePrinter {
 
@@ -41,7 +41,6 @@ public class JsInteropPrinter implements FilePrinter {
     final StringBuffer buffer = new StringBuffer();
     buffer.append(jFile.getHeaderComment());
     writePackageName(buffer, jFile.getPackageName());
-    writeImports(buffer, jFile.getImports());
     writeInterface(buffer, jFile);
     writeMethods(buffer, jFile);
     // write methods;

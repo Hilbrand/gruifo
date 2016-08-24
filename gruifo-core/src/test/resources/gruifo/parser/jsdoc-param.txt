@@ -21,14 +21,13 @@
  *   @param {!nl.StateNotNull} stateNonNull state not null parameter.
  * Variable arguments parameter:
  *   @param {...nl.Varargs} var_args variable arguments parameter.
- * Multiline parameter:
+ * Multi line parameter:
  *   @param {nl.some.One|Array.<nl.some.One>|nl.some.Two|undefined}
  *    nextLine param on next Line 
  * Generic parameter:
- *   @param {Object.<Object2.<string, nl.Attribution>, string>} attributions.
- *   @param {Object.<string, *>} string_objects
- * Optional generic parameters:
- *   @param {ol.geom.Geometry|Object.<string, *>=} opt_geometryOrProperties
+ *   @param {Object.<Object2.<string, nl.Attribution>, string2>} attributions.
+ * Choice generic parameters:
+ *   @param {nl.Object|Object.<string, *>=} opt_geometryOrProperties
  *   @param {Object.<string, string|number>} params parameters.
  *   @param {Object.<undefined|string, string|number|undefined>} params parameters.
  */

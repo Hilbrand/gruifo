@@ -16,6 +16,7 @@
 package gruifo.lang.js;
 
 import java.util.EnumSet;
+import java.util.List;
 
 import javax.lang.model.element.Modifier;
 
@@ -28,19 +29,29 @@ public class JsMethod {
   private final EnumSet<Modifier> modifiers = EnumSet.noneOf(Modifier.class);
 
   private JsElement element;
-  private String methodName;
+  private String functionName;
+  private List<JsParam> params = null;
 
   public JsMethod(final String packageName, final String functionName) {
     this.packageName = packageName;
-    methodName = functionName;
+    this.functionName = functionName;
   }
 
-  public Modifier getModifier() {
-    return element.getModifier();
+  public JsMethod(final JsMethod jsMethod) {
+    this(jsMethod.getPackageName(), jsMethod.getMethodName());
+    element = jsMethod.getElement();
+  }
+
+  public EnumSet<Modifier> getModifiers() {
+    return modifiers;
   }
 
   public String getPackageName() {
     return packageName;
+  }
+
+  public List<JsParam> getParams() {
+    return params == null ? element.getParams() : params;
   }
 
   public JsElement getElement() {
@@ -48,7 +59,7 @@ public class JsMethod {
   }
 
   public String getMethodName() {
-    return methodName;
+    return functionName;
   }
 
   public boolean isAbstractMethod() {
@@ -65,10 +76,15 @@ public class JsMethod {
 
   public void setElement(final JsElement element) {
     this.element = element;
+    modifiers.add(element.getModifier());
   }
 
   public void setMethodName(final String methodName) {
-    this.methodName = methodName;
+    this.functionName = methodName;
+  }
+
+  public void setParams(final List<JsParam> params) {
+    this.params = params;
   }
 
   public void setStaticMethod(final boolean staticMethod) {
@@ -77,7 +93,7 @@ public class JsMethod {
 
   @Override
   public String toString() {
-    return "JsMethod [element=" + element + ", methodName=" + methodName
+    return "JsMethod [element=" + element + ", methodName=" + functionName
         + ", packageName=" + packageName + ", modifers=" + modifiers.toString()
         + "]";
   }

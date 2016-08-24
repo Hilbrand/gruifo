@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package gruifo.output;
+package gruifo.output.util;
 
 /**
  * Util class to add new lines and indentation and other useful methods for

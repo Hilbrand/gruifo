@@ -16,7 +16,7 @@
 package gruifo.output.jsni;
 
 import gruifo.lang.java.JClass.EnumValue;
-import gruifo.output.PrintUtil;
+import gruifo.output.util.PrintUtil;
 
 import java.util.List;
 

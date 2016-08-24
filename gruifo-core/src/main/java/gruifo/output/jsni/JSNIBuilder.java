@@ -26,7 +26,7 @@ import gruifo.lang.java.JClass.EnumValue;
 import gruifo.lang.java.JMethod;
 import gruifo.lang.js.JsFile;
 import gruifo.output.FilePrinter;
-import gruifo.output.PrintUtil;
+import gruifo.output.util.PrintUtil;
 
 public class JSNIBuilder implements FilePrinter {
   private final Transformer transformer = new Transformer();

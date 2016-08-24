@@ -17,9 +17,7 @@ package gruifo.lang.java;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.lang.model.element.Modifier;
 
@@ -51,15 +49,14 @@ public class JClass {
       return type;
     }
   }
+  private String headerComment = "";
   private final String packageName;
+  private String classDescription;
   private final String classOrInteraceName;
-  private final Set<String> imports = new HashSet<>();
   private final List<JParam> fields = new ArrayList<>();;
   private final List<JMethod> methods = new ArrayList<>();
   private final List<EnumValue> enumValues = new ArrayList<>();
-  private String headerComment = "";
   private final List<JClass> innerJFil = new ArrayList<>();
-  private String classDescription;
 
   private final List<JMethod> constructors = new ArrayList<>();
   private final List<TypeVariableName> typeVariables = new ArrayList<>();
@@ -130,10 +127,6 @@ public class JClass {
 
   public String getHeaderComment() {
     return headerComment;
-  }
-
-  public Set<String> getImports() {
-    return imports;
   }
 
   public List<JClass> getInnerJFiles() {

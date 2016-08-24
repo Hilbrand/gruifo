@@ -19,7 +19,7 @@ package gruifo.lang.js;
  * Data class representing a JavaScript parameter.
  */
 public class JsParam {
-  private JsType type;
+  private JsTypeObject type;
   private String name;
   private JsElement element;
 
@@ -39,7 +39,7 @@ public class JsParam {
     return name;
   }
 
-  public JsType getType() {
+  public JsTypeObject getType() {
     return element == null ? type : element.getType();
   }
 
@@ -47,8 +47,8 @@ public class JsParam {
     this.name = name;
   }
 
-  public void setType(final JsType jsType) {
-    this.type = jsType;
+  public void setType(final JsTypeObject jsTypeObject) {
+    this.type = jsTypeObject;
   }
 
   @Override

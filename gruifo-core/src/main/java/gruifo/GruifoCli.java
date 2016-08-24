@@ -19,9 +19,6 @@ import java.io.IOException;
 
 import org.apache.commons.cli.ParseException;
 
-import gruifo.output.FilePrinter;
-import gruifo.output.jsinterop.JsInteropPrinter;
-import gruifo.output.jsni.JSNIBuilder;
 import gruifo.output.jsni.TypeMapper;
 
 /**
@@ -39,21 +36,15 @@ public final class GruifoCli {
     if (cmdOptions.printIfInfoOption()) {
       return;
     }
-    final FilePrinter fp = detectFilePrinter(cmdOptions);
+    final OutputType outputType = determineOutputType(cmdOptions);
     TypeMapper.INSTANCE.addMappings(cmdOptions.getTypeMappingProperties());
 
     final Controller controller =
         new Controller(cmdOptions.getSourcePaths(), cmdOptions.getTargetDir());
-    controller.run(fp);
+    controller.run(outputType);
   }
 
-  private static FilePrinter detectFilePrinter(final CmdOptions cmdOptions) {
-    final FilePrinter fp;
-    if (cmdOptions.isJSInterop()) {
-      fp = new JsInteropPrinter();
-    } else {
-      fp = new JSNIBuilder();
-    }
-    return fp;
+  private static OutputType determineOutputType(final CmdOptions cmdOptions) {
+    return cmdOptions.isJSInterop() ? OutputType.JSI : OutputType.JSNI;
   }
 }

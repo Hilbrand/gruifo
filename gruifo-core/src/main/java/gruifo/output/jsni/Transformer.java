@@ -35,6 +35,7 @@ import gruifo.lang.js.JsFile;
 import gruifo.lang.js.JsMethod;
 import gruifo.lang.js.JsParam;
 import gruifo.lang.js.JsType;
+import gruifo.lang.js.JsTypeObject;
 
 /**
  * Transforms JavaScript into Java.
@@ -101,29 +102,21 @@ class Transformer {
   private void transformMethods(final JsFile jsFile, final JClass jFile) {
     for(final JsMethod jsMethod: jsFile.getMethods()) {
       if (!ignoreMethod(jFile.getFullClassName(), jsMethod)) {
-        final List<List<JsParam>> list =
-            splitMethodParamsOptional(jsMethod.getElement().getParams());
-        final List<List<JParam>> jParamList = new ArrayList<>();
-        for (final List<JsParam> innerList : list) {
-          jParamList.addAll(split2MethodParamsMulti(innerList));
+        final JMethod method = transformMethod(jFile, jsMethod);
+        if (jsMethod.getElement().isClassDescription()) {
+          jFile.setClassDescription(jsMethod.getElement().getJsDoc());
         }
-        for (final List<JParam> params : jParamList) {
-          final JMethod method = transformMethod(jFile, jsMethod, params);
-          if (jsMethod.getElement().isClassDescription()) {
-            jFile.setClassDescription(jsMethod.getElement().getJsDoc());
-          }
-          if (jsMethod.getElement().isConstructor()) {
-            jFile.addConstructor(method);
-          } else {
-            jFile.addMethod(method);
-          }
+        if (jsMethod.getElement().isConstructor()) {
+          jFile.addConstructor(method);
+        } else {
+          jFile.addMethod(method);
         }
       }
     }
   }
 
   private void setExtends(final JClass jFile, final JsFile jsFile) {
-    final JsType extendsType = jsFile.getElement().getExtends();
+    final JsTypeObject extendsType = jsFile.getElement().getExtends();
     if (jsFile.getElement().getGenericType() != null) {
 //FIXME      jFile.setClassGeneric(
 //          TYPE_MAPPER.mapType(jsFile.getElement().getGenericType()));
@@ -172,131 +165,15 @@ class Transformer {
         || "clone".equals(jsMethod.getMethodName()); // FIXME clone
   }
 
-  /**
-   * Creates multiple parameter lists if a parameter is optional. If a
-   * parameter is optional a parameter list if added without this parameter.
-   * @param jsParams List of parameters
-   * @return List of List of parameters
-   */
-  private List<List<JsParam>> splitMethodParamsOptional(final List<JsParam> jsParams) {
-    final List<List<JsParam>> params = new ArrayList<>();
-    List<JsParam> current = new ArrayList<JsParam>();
-    params.add(current);
-    for (int i = 0; i < jsParams.size(); i++) {
-      final JsParam jsParam = jsParams.get(i);
-      if (jsParam.getType().isOptional()) {
-        current = new ArrayList<JsParam>(params.get(params.size() - 1));
-        params.add(current);
-      }
-      current.add(jsParam);
-    }
-    return params;
-  }
 
-  /**
-   * Creates multiple parameters lists if a parameter type contains multiple
-   * types.
-   * @param jsParams
-   * @return
-   */
-  private List<List<JParam>> split2MethodParamsMulti(
-      final List<JsParam> jsParams) {
-    final List<List<JParam>> params = new ArrayList<>();
-    params.add(new ArrayList<JParam>());
-    for (int i = 0; i < jsParams.size(); i++) {
-      final JsParam jsParam = jsParams.get(i);
-      if (jsParam.getType().getChoices().size() > 1) {
-        expandChoices(params, jsParam);
-      } else {
-        addSingleParam(params, jsParam);
-      }
-    }
-    return params;
-  }
-
-  /**
-   * Add new lists for each choice.
-   * The lists are alternating replicated and then sequential added:
-   * <pre>
-   *   A => A C
-   *   B    B C
-   *        A D
-   *        B D
-   * </pre>
-   * @param params List of combinations of List of parameters.
-   * @param jsParam choice parameters to add.
-   */
-  private void expandChoices(final List<List<JParam>> params,
-      final JsParam jsParam) {
-    final List<JParam> splitParams = optionParam2List(jsParam);
-    final int currentSize = params.size();
-    // Add new lists matching the number of choices.
-    for (int j = 0; j < currentSize; j++) {
-      for (int k = 1; k < splitParams.size(); k++) {
-        params.add(new ArrayList<>(params.get(j)));
-      }
-    }
-    for (int j = 0; j < splitParams.size();j++) {
-      for (int k = 0; k < currentSize; k++) {
-        params.get(k + j * currentSize).add(splitParams.get(j));
-      }
-    }
-  }
-
-  /**
-   * Add the given jsParam to each list in params.
-   * @param params List of combinations of List of parameters.
-   * @param jsParam parameter to add.
-   */
-  private void addSingleParam(final List<List<JParam>> params,
-      final JsParam jsParam) {
-    for (final TypeName type: transformType(jsParam.getType())) {
-      final JParam jParam = new JParam(jsParam.getName(), type);
-      for (final List<JParam> list : params) {
-        list.add(jParam);
-      }
-    }
-  }
-
-  public List<JParam> optionParam2List(final JsParam jsParam) {
-    final List<JParam> splitParams = new ArrayList<>();
-    for (final JsType innerJsParam : jsParam.getType().getChoices()) {
-      final TypeName transformedType = transformType(innerJsParam, true);
-      if (!isDuplicate(splitParams, transformedType)) {
-        splitParams.add(new JParam(jsParam.getName(), transformedType));
-      }
-    }
-    return splitParams;
-  }
-
-  private void optionParam2List(final JsType jsType, final List<JParam> params) {
-    for (final JsType innerJsParam : jsType.getChoices()) {
-      optionParam2List(innerJsParam, params);
-    }
-  }
-
-  private boolean isDuplicate(final List<JParam> splitParams,
-      final TypeName transformedType) {
-    boolean duplicate = false;
-    if (transformedType != null) {
-      for (final JParam jParam : splitParams) {
-        if (transformedType.equals(jParam.getType())) {
-          duplicate = true;
-        }
-      }
-    }
-    return duplicate;
-  }
-
-  private JMethod transformMethod(final JClass jFile, final JsMethod jsMethod,
-      final List<JParam> params) {
+  private JMethod transformMethod(final JClass jFile, final JsMethod jsMethod) {
     final JMethod jMethod = new JMethod(jsMethod.getPackageName(),
-        jsMethod.getMethodName(), jsMethod.getModifier());
+        jsMethod.getMethodName(), jsMethod.getModifiers());
     jMethod.setJsDoc(jsMethod.getElement().getJsDoc());
     jMethod.setAbstract(jsMethod.isAbstractMethod());
     jMethod.setStatic(jsMethod.isStaticMethod());
     setReturnType(jsMethod, jMethod);
-    for (final JParam param : params) {
+    for (final JsParam param : jsMethod.getParams()) {
       jMethod.addParam(filterParam(jFile, jMethod, param));
     }
     return jMethod;

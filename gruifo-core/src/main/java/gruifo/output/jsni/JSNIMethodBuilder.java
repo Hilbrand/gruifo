@@ -25,7 +25,7 @@ import com.squareup.javapoet.TypeSpec.Builder;
 import gruifo.lang.java.JClass;
 import gruifo.lang.java.JMethod;
 import gruifo.lang.java.JParam;
-import gruifo.output.PrintUtil;
+import gruifo.output.util.PrintUtil;
 
 public class JSNIMethodBuilder {
 

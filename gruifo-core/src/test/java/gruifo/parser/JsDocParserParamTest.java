@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import gruifo.lang.js.JsParam;
 import gruifo.lang.js.JsType;
+import gruifo.lang.js.JsTypeList;
 
 /**
  * Test class for {@link JavaScriptDocParser} for param annotation.
@@ -37,7 +38,7 @@ public class JsDocParserParamTest extends JsDocParserTestBase {
 
   @Test
   public void testNumberOfParams() {
-    assertEquals("params size", 22, jsElement.getParams().size());
+    assertEquals("params size", 21, jsElement.getParams().size());
   }
 
   @Test
@@ -62,13 +63,14 @@ public class JsDocParserParamTest extends JsDocParserTestBase {
     assertArray1Generic(8, "nl.SomeObject");
     assertArray1Generic(9, "nl.SomeObject");
     assertEquals("2dn argument of Array", "number",
-        getParamTypeAtRow(9).getTypeList().get(1).getName());
+        ((JsType) getParamTypeAtRow(9).getTypeList().get(1)).getName());
   }
 
   private void assertArray1Generic(final int idx, final String genericType) {
     assertEquals("param Array", "Array", getParamNameAtRow(idx));
+    final JsType type = (JsType) getParamAtRow(idx).getType();
     assertEquals("argument of Array", genericType,
-        getParamAtRow(idx).getType().getTypeList().get(0).getName());
+        ((JsType) type.getTypeList().get(0)).getName());
   }
 
   @Test
@@ -114,22 +116,50 @@ public class JsDocParserParamTest extends JsDocParserTestBase {
   @Test
   public void test2LineParam() {
     assertEquals("Param multi line should have 2 params", 3,
-        getParamTypeAtRow(16).getChoices().size());
+        ((JsTypeList) getParamAtRow(16).getType()).getTypes().size());
   }
 
   @Test
   public void testGenericParams() {
-    assertEquals("1st type", getParamNameAtRow(17), "Object");
-    assertEquals("2st type", getParamTypeAtRow(17).getGenericType(0), "Object");
+    final JsType paramType = getParamTypeAtRow(17);
+    assertEquals("1st type", "Object", getParamNameAtRow(17));
+    final JsType genTyp0 = (JsType) paramType.getGenericType(0);
+    assertEquals("2dn rawtype", "Object2.<string, nl.Attribution>",
+        genTyp0.getRawType());
+    assertEquals("2nd type", "Object2", genTyp0.getName());
+    assertEquals("3th type", "string",
+        ((JsType) genTyp0.getGenericType(0)).getName());
+    assertEquals("3th type, 2nd param", "nl.Attribution",
+        ((JsType) genTyp0.getGenericType(1)).getName());
+    assertEquals("3th type, 2nd param", "nl.Attribution",
+        ((JsType) genTyp0.getGenericType(1)).getRawType());
+    assertEquals("2nd type, 2dn param", "string2",
+        ((JsType) paramType.getGenericType(1)).getName());
+  }
 
-//    assertEquals("", );
+  @Test
+  public void testChoiceParams1() {
+    final JsTypeList paramType = (JsTypeList) getParamAtRow(18).getType();
+    assertEquals("2 choices", 2, paramType.getTypes().size());
+    assertTrue("Is optional", paramType.isOptional());
+    assertEquals("1st choice", "nl.Object",
+        ((JsType) paramType.get(0)).getName());
+    assertEquals("2nd choice", "Object",
+        ((JsType) paramType.get(1)).getName());
+    assertEquals("2nd choice rawtype", "Object.<string, *>",
+        paramType.get(1).getRawType());
+  }
 
-    assertEquals("params size", 2,
-        jsElement.getParams().get(14).getType().getTypeList().size());
-    assertEquals("params size", "string",
-        jsElement.getParams().get(14).getType().getTypeList().get(0).getName());
-    assertEquals("params size", "*",
-        jsElement.getParams().get(14).getType().getTypeList().get(1).getName());
+  @Test
+  public void testChoiceParams2() {
+    assertEquals("param Object", "Object", getParamNameAtRow(19));
+//    final JsTypeList paramType = (JsTypeList) getParamTypeAtRow(19).getTypeList()get(19).getType();
+//    assertEquals("2 choices", 2, paramType.getTypes().size());
+//    assertEquals("1st choice", "nl.Object",
+//        ((JsType) paramType.get(0)).getName());
+//    assertEquals("2nd choice", "Object", ((JsType) paramType.get(1)).getName());
+//    assertEquals("2nd choice rawtype", "Object.<string, *>",
+//        paramType.get(1).getRawType());
   }
 
   private String getParamNameAtRow(final int idx) {
@@ -137,7 +167,7 @@ public class JsDocParserParamTest extends JsDocParserTestBase {
   }
 
   private JsType getParamTypeAtRow(final int idx) {
-    return getParamAtRow(idx).getType();
+    return (JsType) getParamAtRow(idx).getType();
   }
 
   private JsParam getParamAtRow(final int idx) {

@@ -13,11 +13,11 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package gruifo.lang;
+package gruifo.parser;
 
-public enum AccessType {
-  PRIVATE,
-  PROTECTED,
-  PUBLIC,
-  DEFAULT;
+/**
+ * Test class for {@link JsMethodSplitser}.
+ */
+public class JsMethodSplitserTest {
+
 }

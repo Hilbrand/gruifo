@@ -15,12 +15,6 @@
  */
 package gruifo.parser;
 
-import gruifo.lang.js.JsElement;
-import gruifo.lang.js.JsFile;
-import gruifo.lang.js.JsMethod;
-import gruifo.lang.js.JsParam;
-import gruifo.output.PrintUtil;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -44,6 +38,15 @@ import org.mozilla.javascript.ast.PropertyGet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gruifo.lang.js.JsElement;
+import gruifo.lang.js.JsFile;
+import gruifo.lang.js.JsMethod;
+import gruifo.lang.js.JsParam;
+import gruifo.output.util.PrintUtil;
+
+/**
+ *
+ */
 public class JavaScriptFileParser implements NodeVisitor {
   private static final Logger LOG = LoggerFactory
       .getLogger(JavaScriptFileParser.class);
@@ -60,6 +63,10 @@ public class JavaScriptFileParser implements NodeVisitor {
 
   private final String fileName;
 
+  /**
+   *
+   * @param fileName
+   */
   public JavaScriptFileParser(final String fileName) {
     this.fileName = fileName;
   }

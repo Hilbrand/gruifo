@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import gruifo.lang.js.JsType;
+import gruifo.lang.js.JsTypeList;
+import gruifo.lang.js.JsTypeObject;
 
 /**
  * Parse the types of @param, @return and @type elements.
@@ -28,8 +30,13 @@ public class JsTypeParser {
 
   private static final String FUNCTION = "function(";
 
-  public JsType parseType(final String rawType) {
-    return typeParser(replaceRawType(stripParentheses(rawType)));
+  public JsTypeObject parseType(final String rawType) {
+    final String stripped = replaceRawType(stripParentheses(rawType));
+    final boolean optional = isOptional(stripped);
+    final JsTypeObject type = typeParser(optional
+        ? stripped.substring(0, stripped.length() - 1): stripped);
+    type.setOptional(optional);
+    return type;
   }
 
   private String stripParentheses(final String type) {
@@ -45,26 +52,31 @@ public class JsTypeParser {
     return strippedType;
   }
 
+  private boolean isOptional(final String stripped) {
+    return '=' == stripped.charAt(stripped.length() - 1);
+  }
+
   private String replaceRawType(final String rawType) {
     //FIXME don't hardcode ol.proj.ProjectionLike, but read from configuration
     return rawType.replace("ol.proj.ProjectionLike",
         "ol.proj.Projection|string|undefined");
   }
 
-  private JsType typeParser(final String rawType) {
+  private JsTypeObject typeParser(final String rawType) {
     final char[] chars = rawType.toCharArray();
-    final JsType root;
-    final List<JsType> types = typeParser(rawType, chars, new AtomicInteger());
+    final JsTypeObject root;
+    final List<JsTypeObject> types =
+        typeParser(rawType, chars, new AtomicInteger());
     if (types.size() == 1) {
       root = types.get(0);
     } else {
-      root = new JsType(rawType);
-      root.addChoices(types);
+      root = new JsTypeList(rawType);
+      ((JsTypeList) root).add(types);
     }
     return root;
   }
 
-  private List<JsType> typeParser(final String rawType, final char[] chars,
+  private List<JsTypeObject> typeParser(final String rawType, final char[] chars,
       final AtomicInteger idx) {
     int startPos = idx.get();
     int startPosChoices = startPos;
@@ -74,9 +86,9 @@ public class JsTypeParser {
     boolean notNull = false, canNull = false, optional = false, varArgs = false,
         newType = false, decreaseDepth = false, inFunction = false,
         endFunction = false, param = false;
-    final List<JsType> types = new ArrayList<>();
-    final List<JsType> choices = new ArrayList<>();
-    List<JsType> subTypes = null;
+    final List<JsTypeObject> types = new ArrayList<>();
+    final List<JsTypeObject> choices = new ArrayList<>();
+    List<JsTypeObject> subTypes = null;
     for (; idx.get() < chars.length; idx.incrementAndGet()) {
       final int i = idx.get();
       endPos = i;
@@ -149,8 +161,7 @@ public class JsTypeParser {
       case '=': // optional argument. = is positioned after type
         optional = true;
         endPos--;
-        // is last so we can finish type
-        break;
+        throw new IllegalArgumentException("Unexpected '=' in " + rawType);
       default:
         break;
       }
@@ -180,10 +191,10 @@ public class JsTypeParser {
             choices.get(0).setNull(withNull);
             types.add(choices.get(0));
           } else {
-            final JsType choicesType =
-                new JsType(rawType.substring(startPosChoices, endPos + 1));
+            final JsTypeList choicesType =
+                new JsTypeList(rawType.substring(startPosChoices, endPos + 1));
             choicesType.setNull(withNull);
-            choicesType.addChoices(choices);
+            choicesType.add(choices);
             types.add(choicesType);
           }
           choices.clear();

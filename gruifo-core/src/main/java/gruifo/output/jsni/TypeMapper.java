@@ -34,8 +34,6 @@ public final class TypeMapper {
   public static final TypeMapper INSTANCE = new TypeMapper();
 
   private final Map<String, TypeName> mapper = new HashMap<>();
-  private final Map<String, TypeName> primitiveMapper = new HashMap<>();
-  private final Map<String, TypeName> genericMapper = new HashMap<>();
   private final Set<String> ignores = new HashSet<>();
   private final Map<String, String> replaceTypes = new HashMap<>();
 

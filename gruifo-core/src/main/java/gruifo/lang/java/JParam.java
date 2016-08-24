@@ -15,15 +15,17 @@
  */
 package gruifo.lang.java;
 
+import java.util.EnumSet;
+
+import javax.lang.model.element.Modifier;
+
 import com.squareup.javapoet.TypeName;
 
 public class JParam {
 
   private TypeName type;
   private final String name;
-  private boolean multiField;
-  private boolean _static;
-  private boolean _final;
+  private final EnumSet<Modifier> modifiers = EnumSet.noneOf(Modifier.class);
   private String javaDoc;
 
   public JParam(final String name, final TypeName type) {
@@ -43,32 +45,8 @@ public class JParam {
     return type;
   }
 
-  public boolean isFinal() {
-    return _final;
-  }
-
-  public boolean isMultiField() {
-    return multiField;
-  }
-
-  public boolean isStatic() {
-    return _static;
-  }
-
-  public void setFinal(final boolean _final) {
-    this._final = _final;
-  }
-
   public void setJavaDoc(final String javaDoc) {
     this.javaDoc = javaDoc;
-  }
-
-  public void setMultiField(final boolean multiField) {
-    this.multiField = multiField;
-  }
-
-  public void setStatic(final boolean _static) {
-    this._static = _static;
   }
 
   public void setType(final TypeName type) {

@@ -21,6 +21,8 @@ import java.io.IOException;
 
 import org.junit.Test;
 
+import gruifo.lang.js.JsType;
+
 /**
  * Test class for {@link JavaScriptDocParser} for typedef annotation with single
  * type.
@@ -33,8 +35,9 @@ public class JsDocParserTypeDef2Test extends JsDocParserTestBase {
 
   @Test
   public void testExtends() {
-    assertEquals("extends", "Array", jsElement.getExtends().getName());
+    final JsType extends1 = (JsType) jsElement.getExtends();
+    assertEquals("extends", "Array", extends1.getName());
     assertEquals("extends", "number",
-        jsElement.getExtends().getTypeList().get(0).getName());
+        ((JsType) extends1.getTypeList().get(0)).getName());
   }
 }

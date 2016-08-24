@@ -40,19 +40,19 @@ public class JsElement {
   private ElementType elementType = ElementType.METHOD;
   private boolean classDesc;
   private String jsDoc;
-  private JsType extendsType;
-  private final List<JsType> implementsTypes = new ArrayList<>();
+  private JsTypeObject extendsType;
+  private final List<JsTypeObject> implementsTypes = new ArrayList<>();
   private final List<JsParam> params = new ArrayList<>();
   private List<JsParam> typeDef;
-  private JsType type;
-  private JsType returnType;
+  private JsTypeObject type;
+  private JsTypeObject returnType;
   private boolean override;
   private String genericType;
-  private JsType define;
-  private JsType enumType;
+  private JsTypeObject define;
+  private JsTypeObject enumType;
 
-  public void addImplements(final JsType parseType) {
-    implementsTypes.add(parseType);
+  public void addImplements(final JsTypeObject jsTypeObject) {
+    implementsTypes.add(jsTypeObject);
   }
 
   public String getJsDoc() {
@@ -63,15 +63,15 @@ public class JsElement {
     return modifier;
   }
 
-  public JsType getDefine() {
+  public JsTypeObject getDefine() {
     return define;
   }
 
-  public JsType getEnumType() {
+  public JsTypeObject getEnumType() {
     return enumType;
   }
 
-  public JsType getExtends() {
+  public JsTypeObject getExtends() {
     return extendsType;
   }
 
@@ -79,7 +79,7 @@ public class JsElement {
     return genericType;
   }
 
-  public List<JsType> getImplements() {
+  public List<JsTypeObject> getImplements() {
     return implementsTypes;
   }
 
@@ -91,7 +91,7 @@ public class JsElement {
     return params;
   }
 
-  public JsType getType() {
+  public JsTypeObject getType() {
     return type;
   }
 
@@ -99,7 +99,7 @@ public class JsElement {
     return typeDef;
   }
 
-  public JsType getReturn() {
+  public JsTypeObject getReturn() {
     return returnType;
   }
 
@@ -163,18 +163,18 @@ public class JsElement {
     elementType = ElementType.CONSTRUCTOR;
   }
 
-  public void setDefine(final JsType define) {
-    this.define = define;
+  public void setDefine(final JsTypeObject jsTypeObject) {
+    this.define = jsTypeObject;
     elementType = ElementType.DEFINE;
   }
 
-  public void setEnum(final JsType jsType) {
+  public void setEnum(final JsTypeObject jsTypeObject) {
     elementType = ElementType.ENUM;
-    enumType = jsType;
+    enumType = jsTypeObject;
   }
 
-  public void setExtends(final JsType _extends) {
-    this.extendsType = _extends;
+  public void setExtends(final JsTypeObject jsTypeObject) {
+    this.extendsType = jsTypeObject;
   }
 
   public void setGenericType(final String genericType) {
@@ -205,12 +205,12 @@ public class JsElement {
     modifier = Modifier.PROTECTED;
   }
 
-  public void setReturn(final JsType _return) {
-    this.returnType = _return;
+  public void setReturn(final JsTypeObject jsTypeObject) {
+    this.returnType = jsTypeObject;
   }
 
-  public void setType(final JsType type) {
-    this.type = type;
+  public void setType(final JsTypeObject jsTypeObject) {
+    this.type = jsTypeObject;
   }
 
   public void setTypeDef(final List<JsParam> typeDef) {
