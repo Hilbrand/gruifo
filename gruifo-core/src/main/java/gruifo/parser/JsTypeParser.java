@@ -26,12 +26,12 @@ import gruifo.lang.js.JsTypeObject;
 /**
  * Parse the types of @param, @return and @type elements.
  */
-public class JsTypeParser {
+class JsTypeParser {
 
   private static final String FUNCTION = "function(";
 
   public JsTypeObject parseType(final String rawType) {
-    final String stripped = replaceRawType(stripParentheses(rawType));
+    final String stripped = stripParentheses(rawType);
     final boolean optional = isOptional(stripped);
     final JsTypeObject type = typeParser(optional
         ? stripped.substring(0, stripped.length() - 1): stripped);
@@ -56,12 +56,6 @@ public class JsTypeParser {
     return '=' == stripped.charAt(stripped.length() - 1);
   }
 
-  private String replaceRawType(final String rawType) {
-    //FIXME don't hardcode ol.proj.ProjectionLike, but read from configuration
-    return rawType.replace("ol.proj.ProjectionLike",
-        "ol.proj.Projection|string|undefined");
-  }
-
   private JsTypeObject typeParser(final String rawType) {
     final char[] chars = rawType.toCharArray();
     final JsTypeObject root;
@@ -76,16 +70,14 @@ public class JsTypeParser {
     return root;
   }
 
-  private List<JsTypeObject> typeParser(final String rawType, final char[] chars,
-      final AtomicInteger idx) {
+  private List<JsTypeObject> typeParser(final String rawType,
+      final char[] chars, final AtomicInteger idx) {
+    final ParseState parseState = new ParseState();
     int startPos = idx.get();
     int startPosChoices = startPos;
     int nameEndPos = startPos;
     int parentheses = 0;
     int endPos;
-    boolean notNull = false, canNull = false, optional = false, varArgs = false,
-        newType = false, decreaseDepth = false, inFunction = false,
-        endFunction = false, param = false;
     final List<JsTypeObject> types = new ArrayList<>();
     final List<JsTypeObject> choices = new ArrayList<>();
     List<JsTypeObject> subTypes = null;
@@ -95,7 +87,7 @@ public class JsTypeParser {
       switch (chars[i]) {
       case 'f':
         if (rawType.substring(i).startsWith(FUNCTION)) {
-          inFunction = true;
+          parseState.inFunction = true;
           parentheses++;
         }
         break;
@@ -104,13 +96,13 @@ public class JsTypeParser {
         break;
       case ')':
         parentheses--;
-        endFunction = parentheses == 0;
+        parseState.endFunction = parentheses == 0;
         break;
       case ' ':
         if (startPos == endPos) {
           startPos++;
         } else {
-          newType = true;
+          parseState.newType = true;
           endPos--;
         }
         break;
@@ -123,7 +115,7 @@ public class JsTypeParser {
           subTypes = typeParser(rawType, chars, idx);
           endPos = idx.get();
         } else if (chars[i+1] == '.' && chars[i+2] == '.') {
-          varArgs = true;
+          parseState.varArgs = true;
           idx.addAndGet(2); // skip ...
           startPos = i + 3;
         }
@@ -131,35 +123,36 @@ public class JsTypeParser {
       case ',':
         // set inFunction to false  when we passed the end of the function,
         // But ONLY when inFunction is already true
-        inFunction = inFunction && !endFunction;
-        param = true;
-        newType = true;
+        parseState.inFunction =
+        parseState.inFunction && !parseState.endFunction;
+        parseState.param = true;
+        parseState.newType = true;
         endPos--;
         break;
       case '<':
         // should not happen...
         throw new IllegalArgumentException("Unexpected '<' in " + rawType);
       case '>':
-        decreaseDepth = true;
-        newType = true;
+        parseState.decreaseDepth = true;
+        parseState.newType = true;
         endPos--;
         break;
       case '|': // new choice argument
-        newType = true;
+        parseState.newType = true;
         endPos--;
         break;
       case '!': // argument can't be null. !  is positioned before type
-        notNull = true;
+        parseState.notNull = true;
         startPos++;
         break;
       case '?': // argument can be null. ? is positioned before type
         if (startPos == endPos) {
-          canNull = true;
+          parseState.canNull = true;
           startPos++;
         }
         break;
       case '=': // optional argument. = is positioned after type
-        optional = true;
+        parseState.optional = true;
         endPos--;
         throw new IllegalArgumentException("Unexpected '=' in " + rawType);
       default:
@@ -169,7 +162,7 @@ public class JsTypeParser {
         nameEndPos = endPos;
       }
       boolean lastToken = idx.get() == chars.length - 1;
-      if (!inFunction && newType || lastToken) {
+      if (!parseState.inFunction && parseState.newType || lastToken) {
         final String sType = rawType.substring(startPos, endPos + 1);
         final String name = rawType.substring(startPos, nameEndPos + 1);
         boolean withNull = false;
@@ -178,15 +171,15 @@ public class JsTypeParser {
         } else {
           final JsType jsType = new JsType(name, sType);
           jsType.setFunction(sType.startsWith(FUNCTION));
-          jsType.setVarArgs(varArgs);
-          jsType.setNotNull(notNull);
-          jsType.setNull(canNull);
-          jsType.setOptional(optional);
+          jsType.setVarArgs(parseState.varArgs);
+          jsType.setNotNull(parseState.notNull);
+          jsType.setNull(parseState.canNull);
+          jsType.setOptional(parseState.optional);
           jsType.addGenericTypes(subTypes);
           choices.add(jsType);
         }
         lastToken = idx.get() == chars.length - 1;
-        if (param || decreaseDepth || lastToken) {
+        if (parseState.param || parseState.decreaseDepth || lastToken) {
           if (choices.size() == 1) {
             choices.get(0).setNull(withNull);
             types.add(choices.get(0));
@@ -198,26 +191,28 @@ public class JsTypeParser {
             types.add(choicesType);
           }
           choices.clear();
-          if (decreaseDepth || lastToken) {
+          if (parseState.decreaseDepth || lastToken) {
             return types;
           }
-          if (param) {
+          if (parseState.param) {
             startPosChoices = i + 1;
           }
         }
         startPos = idx.get() + 1;
-        newType = false;
-        param = false;
-        varArgs = false;
-        notNull = false;
-        canNull = false;
-        optional = false;
-        inFunction = false;
-        endFunction = false;
-        decreaseDepth = false;
+        parseState.resetAll();
         subTypes = null;
       }
     }
     return types;
+  }
+
+  private static class ParseState {
+    boolean notNull, canNull, optional, varArgs, newType, decreaseDepth,
+        inFunction, endFunction, param;
+
+    void resetAll() {
+      newType = param = varArgs = notNull = canNull = optional = inFunction
+          = endFunction = decreaseDepth = false;
+    }
   }
 }

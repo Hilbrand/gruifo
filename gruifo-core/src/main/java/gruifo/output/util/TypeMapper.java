@@ -28,6 +28,7 @@ import gruifo.lang.js.JsTypeObject;
 
 /**
  * Converts JavaScript type to Java type objects.
+ * FIXME: probably only primitive types mapper?
  */
 public class TypeMapper {
 

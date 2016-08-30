@@ -1,0 +1,20 @@
+{
+  'replace': {
+    '*': 'com.google.gwt.core.client.JavaScriptObject',
+    'object': 'com.google.gwt.core.client.JavaScriptObject',
+    'Object': 'com.google.gwt.core.client.JavaScriptObject',
+//    'undefined': 'com.google.gwt.core.client.JavaScriptObject',
+
+    'HTMLDocument': 'com.google.gwt.dom.client.Node',
+    'Document': 'com.google.gwt.dom.client.Document',
+    'Node': 'com.google.gwt.dom.client.Node',
+    'Element': 'com.google.gwt.dom.client.Element',
+    'Event': 'com.google.gwt.dom.client.NativeEvent',
+    'Touch': 'com.google.gwt.dom.client.Touch',
+
+    'Array': 'com.google.gwt.core.client.JsArray',
+    'Array.<*>': 'com.google.gwt.core.client.JsArray',
+    'Array.<number>': 'com.google.gwt.core.client.JsArrayNumber',
+    'Array.<string>': 'com.google.gwt.core.client.JsArrayString',
+  }
+}

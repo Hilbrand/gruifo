@@ -104,6 +104,10 @@ class CmdOptions {
     return file;
   }
 
+  public String getTypeMappingFile() {
+    return cmd.hasOption(TYPE_MAPPING) ? cmd.getOptionValue(TYPE_MAPPING) : "";
+  }
+
   public Properties getTypeMappingProperties()
       throws FileNotFoundException, IOException {
     final Properties props = new Properties();

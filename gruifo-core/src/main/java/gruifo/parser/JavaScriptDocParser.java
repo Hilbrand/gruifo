@@ -28,7 +28,7 @@ import gruifo.lang.js.JsTypeObject;
 /**
  * Parses the annotations in the JavaScript doc.
  */
-public class JavaScriptDocParser {
+class JavaScriptDocParser {
   private static final Logger LOG =
       LoggerFactory.getLogger(JavaScriptDocParser.class);
 
@@ -327,6 +327,7 @@ public class JavaScriptDocParser {
   private JsTypeObject parseType(final String line, final String fileName) {
     final Pattern pattern = Pattern.compile("\\{([^\\}]+)\\}");
     final Matcher matcher = pattern.matcher(line);
-    return matcher.find() ? jsTypeParser.parseType(matcher.group(1).trim()) : null;
+    return matcher.find() ?
+        jsTypeParser.parseType(matcher.group(1).trim()) : null;
   }
 }

@@ -47,7 +47,7 @@ import gruifo.output.util.PrintUtil;
 /**
  *
  */
-public class JavaScriptFileParser implements NodeVisitor {
+class JavaScriptFileParser implements NodeVisitor {
   private static final Logger LOG = LoggerFactory
       .getLogger(JavaScriptFileParser.class);
 

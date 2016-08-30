@@ -15,26 +15,63 @@
  */
 package gruifo.output.jsni;
 
-import com.squareup.javapoet.TypeSpec.Builder;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
 
-import gruifo.lang.java.JClass;
+import javax.lang.model.element.Modifier;
+
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeSpec;
+
 import gruifo.lang.java.JParam;
+import gruifo.lang.js.JsFile;
+import gruifo.lang.js.JsParam;
 import gruifo.output.util.PrintUtil;
 
 /**
  * Builds Field members.
  */
-public class JSNIFieldBuilder {
+class JSNIFieldBuilder {
+  private static final Set<Modifier> MODIFIERS =
+      EnumSet.of(Modifier.PUBLIC, Modifier.FINAL, Modifier.NATIVE);
+  private static final Set<Modifier> STATIC_MODIFIERS =
+      EnumSet.of(Modifier.PUBLIC, Modifier.FINAL, Modifier.NATIVE,
+          Modifier.STATIC);
 
-  public void buildFields(final Builder builder, final JClass jFile) {
-//    if (!jFile.isInterface()) {
-//      for (final JParam field : jFile.getFields()) {
-//        printGetter(buffer, indent, field);
-//        if (!field.isFinal()) {
-//          printSetter(buffer, indent, field);
-//        }
-//      }
-//    }
+  public void buildFields(final TypeSpec.Builder builder, final JsFile jsFile) {
+    if (!jsFile.isInterface()) {
+      buildFieldMethods(builder, jsFile.getFields());
+    }
+  }
+
+  private void buildFieldMethods(final TypeSpec.Builder builder,
+      final List<JsParam> fields) {
+    for (final JsParam field : fields) {
+      builder.addMethod(createGetterMethod(field));
+      if (!field.getElement().isDefine()) {
+        builder.addMethod(createSetterMethod(field));
+      }
+    }
+  }
+
+  private MethodSpec createGetterMethod(final JsParam field) {
+    final String methodName = "get" + field.getName();
+    return null;
+  }
+
+  private MethodSpec createSetterMethod(final JsParam field) {
+    final String methodName = "set" + field.getName();
+    return null;
+  }
+
+  private MethodSpec buildMethod(final String methodName, final String jsDoc) {
+    final Set<Modifier> modfilers;
+    return MethodSpec.methodBuilder(methodName)
+    .addJavadoc("%s", jsDoc)
+    .addModifiers(modfilers)
+    .addCode("%s", buildCodeBlock(method, notAnInterface))
+    .build();
   }
 
   private void printGetter(final StringBuffer buffer, final int indent,

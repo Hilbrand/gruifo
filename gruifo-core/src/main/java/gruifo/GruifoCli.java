@@ -16,6 +16,7 @@
 package gruifo;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.cli.ParseException;
 
@@ -39,8 +40,9 @@ public final class GruifoCli {
     final OutputType outputType = determineOutputType(cmdOptions);
     TypeMapper.INSTANCE.addMappings(cmdOptions.getTypeMappingProperties());
 
-    final Controller controller =
-        new Controller(cmdOptions.getSourcePaths(), cmdOptions.getTargetDir());
+    final Controller controller = new Controller(cmdOptions.getSourcePaths(),
+        cmdOptions.getTargetDir(), cmdOptions.getTypeMappingFile(),
+        StandardCharsets.UTF_8);
     controller.run(outputType);
   }
 

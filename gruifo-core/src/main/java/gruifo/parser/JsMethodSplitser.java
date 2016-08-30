@@ -28,7 +28,7 @@ import gruifo.lang.js.JsTypeObject;
  * Class to splits methods with choice or optional parameters into separate
  * methods.
  */
-public class JsMethodSplitser {
+class JsMethodSplitser {
 
   /**
    *

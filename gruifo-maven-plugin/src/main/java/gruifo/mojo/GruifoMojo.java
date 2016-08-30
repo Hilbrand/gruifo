@@ -15,17 +15,12 @@
  */
 package gruifo.mojo;
 
-import gruifo.Controller;
-import gruifo.OutputType;
-import gruifo.output.jsni.TypeMapper;
-
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
@@ -37,6 +32,11 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+
+import com.google.gson.JsonSyntaxException;
+
+import gruifo.Controller;
+import gruifo.OutputType;
 
 /**
  *
@@ -65,6 +65,9 @@ public class GruifoMojo extends AbstractMojo {
   @Parameter
   private String typeMapperFile;
 
+  @Parameter
+  private final String charSet = StandardCharsets.UTF_8.name();
+
   /**
    * The Maven project instance for the executing project.
    */
@@ -75,30 +78,19 @@ public class GruifoMojo extends AbstractMojo {
   public void execute() throws MojoExecutionException, MojoFailureException {
     getLog().info("Generate gwt library");
     final List<File> srcPaths = processInputArguments();
-    final File outputPath = new File(project.getBuild().getDirectory(), GEN_DIRECTORY);
-    setTypeMappings();
-    final Controller controller = new Controller(srcPaths, outputPath);
+    final File outputPath =
+        new File(project.getBuild().getDirectory(), GEN_DIRECTORY);
+    final Controller controller;
+    try {
+      controller = new Controller(srcPaths, outputPath, typeMapperFile,
+              Charset.forName(charSet));
+    } catch (JsonSyntaxException | IOException e) {
+      throw new MojoExecutionException("Failed to start generation process", e);
+    }
     controller.run(outputType);
     getLog().info("Finished generating sources");
     addGeneratedSourcesAsResource(outputPath);
     addGeneratedSourcesToCompilePath(outputPath);
-  }
-
-  /**
-   * @deprecated should use xml configuration in future.
-   */
-  @Deprecated
-  private void setTypeMappings() {
-    final File localFile = new File(typeMapperFile);
-    if (localFile.exists()) {
-      final Properties props = new Properties();
-      try (final InputStream is = new FileInputStream(localFile)) {
-        props.load(is);
-        TypeMapper.INSTANCE.addMappings(props);
-      } catch (final IOException e) {
-        e.printStackTrace();
-      }
-    }
   }
 
   private List<File> processInputArguments() {
