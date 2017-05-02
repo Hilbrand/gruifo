@@ -65,7 +65,7 @@ class JsTypeParser {
       root = types.get(0);
     } else {
       root = new JsTypeList(rawType);
-      ((JsTypeList) root).add(types);
+      ((JsTypeList) root).addAll(types);
     }
     return root;
   }
@@ -184,11 +184,11 @@ class JsTypeParser {
             choices.get(0).setNull(withNull);
             types.add(choices.get(0));
           } else {
-            final JsTypeList choicesType =
+            final JsTypeList typeList =
                 new JsTypeList(rawType.substring(startPosChoices, endPos + 1));
-            choicesType.setNull(withNull);
-            choicesType.add(choices);
-            types.add(choicesType);
+            typeList.setNull(withNull);
+            typeList.addAll(choices);
+            types.add(typeList);
           }
           choices.clear();
           if (parseState.decreaseDepth || lastToken) {

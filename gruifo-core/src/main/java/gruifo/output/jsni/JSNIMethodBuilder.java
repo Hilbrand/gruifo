@@ -24,7 +24,7 @@ import com.squareup.javapoet.TypeSpec.Builder;
 
 import gruifo.lang.java.JClass;
 import gruifo.lang.java.JMethod;
-import gruifo.lang.java.JParam;
+import gruifo.lang.java.JVar;
 import gruifo.output.util.PrintUtil;
 
 public class JSNIMethodBuilder {
@@ -33,7 +33,7 @@ public class JSNIMethodBuilder {
     final boolean notAnInterface = !jFile.isInterface();
     for (final JMethod method : jFile.getMethods()) {
       // ignore abstract methods => FIXME move to transformer
-      if (method.isAbstractMethod() && notAnInterface) {
+      if (method.isAbstract() && notAnInterface) {
         continue;
       }
       enhanceModifiers(method);
@@ -43,24 +43,24 @@ public class JSNIMethodBuilder {
 
   private MethodSpec buildMethod(final JMethod method,
       final boolean notAnInterface) {
-    return MethodSpec.methodBuilder(method.getMethodName())
-    .addJavadoc("%s", method.getJsDoc())
-    .addModifiers(method.getModifiers())
-    .addParameters(buildParameters(method))
-//    .addTypeVariable(method.getReturn())
-//    .addParameter(typeVariableName, "t") // you can also add modifiers
-    .addCode("%s", buildCodeBlock(method, notAnInterface))
-    .build();
+    return MethodSpec.methodBuilder(method.getName())
+        .addJavadoc(method.getJavaDoc())
+        .addModifiers(method.getModifiers())
+        .addParameters(buildParameters(method))
+        //    .addTypeVariable(method.getReturn())
+        //    .addParameter(typeVariableName, "t") // you can also add modifiers
+        .addCode(buildCodeBlock(method, notAnInterface))
+        .build();
   }
 
   private String buildCodeBlock(final JMethod method,
       final boolean notAnInterface) {
     final StringBuffer buffer = new StringBuffer();
-    if (!method.isAbstractMethod() && notAnInterface) {
+    if (!method.isAbstract() && notAnInterface) {
       buffer.append(" /*-{");
-      buffer.append(PrintUtil.NL);
+      PrintUtil.nl(buffer);
       buildMethodBody(buffer, method);
-      buffer.append(PrintUtil.NL);
+      PrintUtil.nl(buffer);
       buffer.append("}-*/");
     }
     buffer.append(';');
@@ -70,7 +70,7 @@ public class JSNIMethodBuilder {
   private void buildMethodBody(final StringBuffer buffer, final JMethod method) {
     buffer.append(isVoidType(method) ? "" : "return ");
     buffer.append("this.");
-    buffer.append(method.getMethodName());
+    buffer.append(method.getName());
     buffer.append('(');
     printMethodParam(buffer, method, false);
     buffer.append(");");
@@ -82,47 +82,47 @@ public class JSNIMethodBuilder {
     return null;
   }
 
-//  private void printMethods(final StringBuffer buffer, final int indent,
-//      final JClass jFile) {
-//    for (final JMethod method : jFile.getMethods()) {
-//      // ignore abstract methods => FIXME move to transformer
-//      if (method.isAbstractMethod() && !jFile.isInterface()) {
-//        continue;
-//      }
-//      PrintUtil.indent(buffer, method.getJsDoc(), indent);
-//      PrintUtil.indent(buffer, indent);
-////      printModifiers(buffer, jFile, method);
-//      if (method.getGenericType() != null) {
-//        buffer.append('<');
-//        buffer.append(method.getGenericType());
-//        buffer.append(" extends ");
-//        buffer.append(TypeMapper.GWT_JAVA_SCRIPT_OBJECT); //FIXME not hardcode extends generics
-//        buffer.append("> ");
-//      }
-//      buffer.append(method.getReturn());
-//      buffer.append(' ');
-//      buffer.append(method.getMethodName());
-//      buffer.append('(');
-//      printMethodParam(buffer, method, true);
-//      buffer.append(')');
-//      if (method.isAbstractMethod() || jFile.isInterface()) {
-//        buffer.append(';');
-//      } else {
-//        buffer.append(" /*-{");
-//        PrintUtil.nl(buffer);
-//        printMethodBody(buffer, indent + 1, method);
-//        PrintUtil.indent(buffer, indent);
-//        buffer.append("}-*/;");
-//      }
-//      PrintUtil.nl2(buffer);
-//    }
-//  }
+  //  private void printMethods(final StringBuffer buffer, final int indent,
+  //      final JClass jFile) {
+  //    for (final JMethod method : jFile.getMethods()) {
+  //      // ignore abstract methods => FIXME move to transformer
+  //      if (method.isAbstractMethod() && !jFile.isInterface()) {
+  //        continue;
+  //      }
+  //      PrintUtil.indent(buffer, method.getJsDoc(), indent);
+  //      PrintUtil.indent(buffer, indent);
+  ////      printModifiers(buffer, jFile, method);
+  //      if (method.getGenericType() != null) {
+  //        buffer.append('<');
+  //        buffer.append(method.getGenericType());
+  //        buffer.append(" extends ");
+  //        buffer.append(TypeMapper.GWT_JAVA_SCRIPT_OBJECT); //FIXME not hardcode extends generics
+  //        buffer.append("> ");
+  //      }
+  //      buffer.append(method.getReturn());
+  //      buffer.append(' ');
+  //      buffer.append(method.getMethodName());
+  //      buffer.append('(');
+  //      printMethodParam(buffer, method, true);
+  //      buffer.append(')');
+  //      if (method.isAbstractMethod() || jFile.isInterface()) {
+  //        buffer.append(';');
+  //      } else {
+  //        buffer.append(" /*-{");
+  //        PrintUtil.nl(buffer);
+  //        printMethodBody(buffer, indent + 1, method);
+  //        PrintUtil.indent(buffer, indent);
+  //        buffer.append("}-*/;");
+  //      }
+  //      PrintUtil.nl2(buffer);
+  //    }
+  //  }
 
   // @deprecated TODO move to Transformer, should not run on interfaces
   @Deprecated
   private void enhanceModifiers(final JMethod method) {
-    if (!method.contains(Modifier.ABSTRACT)) {
-      method.addModifier(Modifier.FINAL);
+    if (!method.isAbstract()) {
+      method.setFinal(true);
       method.addModifier(Modifier.NATIVE);
     }
   }
@@ -130,7 +130,7 @@ public class JSNIMethodBuilder {
   private void printMethodParam(final StringBuffer buffer,
       final JMethod method, final boolean withType) {
     boolean first = true;
-    for (final JParam param : method.getParams()) {
+    for (final JVar param : method.getParams()) {
       if (!first) {
         buffer.append(", ");
       }
@@ -143,19 +143,19 @@ public class JSNIMethodBuilder {
     }
   }
 
-//  private void printMethodBody(final StringBuffer buffer,
-//      final int indent, final JMethod method) {
-//    PrintUtil.indent(buffer, indent);
-//    buffer.append(isVoidType(method) ? "" : "return ");
-//    buffer.append("this.");
-//    buffer.append(method.getMethodName());
-//    buffer.append('(');
-//    printMethodParam(buffer, method, false);
-//    buffer.append(");");
-//    PrintUtil.nl(buffer);
-//  }
+  //  private void printMethodBody(final StringBuffer buffer,
+  //      final int indent, final JMethod method) {
+  //    PrintUtil.indent(buffer, indent);
+  //    buffer.append(isVoidType(method) ? "" : "return ");
+  //    buffer.append("this.");
+  //    buffer.append(method.getMethodName());
+  //    buffer.append('(');
+  //    printMethodParam(buffer, method, false);
+  //    buffer.append(");");
+  //    PrintUtil.nl(buffer);
+  //  }
 
   private boolean isVoidType(final JMethod method) {
-    return TypeName.VOID.equals(method.getReturn().unbox());
+    return TypeName.VOID.equals(method.getType().unbox());
   }
 }

@@ -22,11 +22,12 @@ import java.util.Set;
 import javax.lang.model.element.Modifier;
 
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.MethodSpec.Builder;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
-import gruifo.lang.java.JParam;
-import gruifo.lang.js.JsFile;
-import gruifo.lang.js.JsParam;
+import gruifo.lang.java.JClass;
+import gruifo.lang.java.JVar;
 import gruifo.output.util.PrintUtil;
 
 /**
@@ -39,115 +40,82 @@ class JSNIFieldBuilder {
       EnumSet.of(Modifier.PUBLIC, Modifier.FINAL, Modifier.NATIVE,
           Modifier.STATIC);
 
-  public void buildFields(final TypeSpec.Builder builder, final JsFile jsFile) {
-    if (!jsFile.isInterface()) {
-      buildFieldMethods(builder, jsFile.getFields());
+  public void buildFields(final TypeSpec.Builder builder, final JClass jFile) {
+    if (!jFile.isInterface()) {
+      buildFieldMethods(builder, jFile.getFields());
     }
   }
 
   private void buildFieldMethods(final TypeSpec.Builder builder,
-      final List<JsParam> fields) {
-    for (final JsParam field : fields) {
+      final List<JVar> list) {
+    for (final JVar field : list) {
       builder.addMethod(createGetterMethod(field));
-      if (!field.getElement().isDefine()) {
+      if (!field.isFinal()) {
         builder.addMethod(createSetterMethod(field));
       }
     }
   }
 
-  private MethodSpec createGetterMethod(final JsParam field) {
-    final String methodName = "get" + field.getName();
-    return null;
+  private MethodSpec createGetterMethod(final JVar field) {
+    final String methodName = getPrefix(field) + getFieldAsMethodName(field);
+    return buildMethod(methodName, field.getType(), field.isStatic(),
+        buildGetterCodeBlock(field), "Getter for " + field.getName()).build();
   }
 
-  private MethodSpec createSetterMethod(final JsParam field) {
-    final String methodName = "set" + field.getName();
-    return null;
+  private String getPrefix(final JVar field) {
+    return field.getType() == TypeName.BOOLEAN ? "is" : "get";
   }
 
-  private MethodSpec buildMethod(final String methodName, final String jsDoc) {
-    final Set<Modifier> modfilers;
+  private MethodSpec createSetterMethod(final JVar field) {
+    final String methodName = "set" + getFieldAsMethodName(field);
+    final Builder builder = buildMethod(methodName, TypeName.VOID,
+        field.isStatic(), buildSetterCodeBlock(field),
+        "Setter for " + field.getName());
+    builder.addParameter(field.getType(), getFieldName(field));
+    return builder.build();
+  }
+
+  private Builder buildMethod(final String methodName,
+      final TypeName returnType, final boolean isStatic, final String codeBlock,
+      final String jsDoc) {
     return MethodSpec.methodBuilder(methodName)
-    .addJavadoc("%s", jsDoc)
-    .addModifiers(modfilers)
-    .addCode("%s", buildCodeBlock(method, notAnInterface))
-    .build();
+        .addJavadoc(jsDoc + "\n")
+        .addModifiers(isStatic ? STATIC_MODIFIERS : MODIFIERS)
+        .returns(returnType)
+        .addCode(codeBlock);
   }
 
-  private void printGetter(final StringBuffer buffer, final int indent,
-      final JParam field) {
-    PrintUtil.indent(buffer, field.getJavaDoc(), indent);
-    PrintUtil.indent(buffer, indent);
-    buffer.append("public ");
-    if (field.isStatic()) {
-      buffer.append("static ");
-    }
-    buffer.append("final native ");
-    buffer.append(field.getType());
-    buffer.append(" get");
-    printFieldName(buffer, field);
-    if (field.isMultiField()) {
-      buffer.append(fixMultiTypeField(field));
-    }
-    buffer.append("() /*-{");
+  private String buildGetterCodeBlock(final JVar field) {
+    final StringBuffer buffer = new StringBuffer();
+    buffer.append(" /*-{");
     PrintUtil.nl(buffer);
-    PrintUtil.indent(buffer, indent + 1);
-    buffer.append("return ");
+    buffer.append("$>return ");
     printFieldVariable(buffer, field);
     buffer.append(';');
     PrintUtil.nl(buffer);
-    PrintUtil.indent(buffer, indent);
-    buffer.append("}-*/;");
-    PrintUtil.nl2(buffer);
+    buffer.append("$<}-*/");
+    return buffer.toString();
   }
 
-  private String fixMultiTypeField(final JParam field) {
-//    final int genericIdx = field.getType().indexOf('<');
-//    final String subString = genericIdx < 0 ? field.getType()
-//        : field.getType().substring(0, genericIdx);
-//    final int dotIdx = subString.lastIndexOf('.');
-//    return  PrintUtil.firstCharUpper(
-//        dotIdx < 0 ? subString : subString.substring(dotIdx + 1));
-    return null;
-  }
-
-  private void printSetter(final StringBuffer buffer, final int indent,
-      final JParam field) {
-    PrintUtil.indent(buffer, field.getJavaDoc(), indent);
-    PrintUtil.indent(buffer, indent);
-    buffer.append("public ");
-    if (field.isStatic()) {
-      buffer.append("static ");
-    }
-    buffer.append("final native void");
-    buffer.append(" set");
-    printFieldName(buffer, field);
-    buffer.append('(');
-    buffer.append(field.getType());
-    buffer.append(' ');
-    printFieldAsVar(buffer, field);
-    buffer.append(") /*-{");
+  private String buildSetterCodeBlock(final JVar field) {
+    final StringBuffer buffer = new StringBuffer();
+    buffer.append(" /*-{");
     PrintUtil.nl(buffer);
-    PrintUtil.indent(buffer, indent + 1);
+    buffer.append("$>");
     printFieldVariable(buffer, field);
     buffer.append(" = ");
-    printFieldAsVar(buffer, field);
+    buffer.append(getFieldName(field));
     buffer.append(';');
     PrintUtil.nl(buffer);
-    PrintUtil.indent(buffer, indent);
-    buffer.append("}-*/;");
-    PrintUtil.nl2(buffer);
+    buffer.append("$<}-*/");
+    return buffer.toString();
   }
 
-  private void printFieldName(final StringBuffer buffer, final JParam field) {
-    buffer.append(PrintUtil.firstCharUpper(getFieldName(field)));
+  private String getFieldAsMethodName(final JVar field) {
+    return PrintUtil.firstCharUpper(getFieldName(field));
   }
 
-  private void printFieldAsVar(final StringBuffer buffer, final JParam field) {
-    buffer.append(PrintUtil.firstCharLower(getFieldName(field)));
-  }
-
-  private String getFieldName(final JParam field) {
+  private String getFieldName(final JVar field) {
     String name = field.getName();
     if (field.isStatic()) {
       final int classSep = name.lastIndexOf('.');
@@ -156,9 +124,9 @@ class JSNIFieldBuilder {
     return name;
   }
 
-  private void printFieldVariable(final StringBuffer buffer, final JParam field) {
+  private void printFieldVariable(final StringBuffer buffer, final JVar field) {
     if (field.isStatic()) {
-      buffer.append("$wnd.");
+      buffer.append("$$wnd.");
       buffer.append(field.getName());
     } else {
       buffer.append("this['");

@@ -100,8 +100,12 @@ public class TypeMapper {
 
   private ClassName getClassName(final String name) {
     final int clzidx = name.lastIndexOf('.');
-    return ClassName.get(name.substring(0, clzidx),
-        name.substring(clzidx + 1, name.length()));
+    if (clzidx < 0) {
+      return null;
+    } else {
+      return ClassName.get(name.substring(0, clzidx),
+          name.substring(clzidx + 1, name.length()));
+    }
   }
 
   private TypeName[] mapTypeList(final List<JsTypeObject> list) {

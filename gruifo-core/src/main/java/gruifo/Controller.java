@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +54,7 @@ public class Controller {
   private final Processor processor ;
 
   public Controller(final List<File> srcPaths, final File outputPath,
-      final String mapperFile, final Charset charSet)
+      final File mapperFile, final Charset charSet)
           throws JsonSyntaxException, IOException {
     this.srcPaths = srcPaths;
     this.outputPath = outputPath;
@@ -77,23 +76,19 @@ public class Controller {
 
   public void run(final FilePrinter printer) {
     final List<JsFile> jsFiles = new ArrayList<>();
-    final List<JsMethod> staticMethods = new ArrayList<>();
-    final Map<String, JsElement> staticConsts = new HashMap<>();
-
     for (final File srcPath : srcPaths) {
       final List<File> files = new ArrayList<>();
       scanJsFiles(files, srcPath);
       for (final File file : files) {
         try {
-          jsFiles.addAll(processor.process(
-              jsParser.parseFile(file.getPath(), staticMethods, staticConsts)));
+          jsFiles.addAll(processor.process(jsParser.parseFile(file.getPath())));
         } catch (final IOException e) {
           LOG.error("Exception parsing file:" + file, e);
         }
       }
     }
-    processStaticConsts(staticConsts);
-    processStaticMethods(staticMethods);
+    processStaticConsts(jsParser.getStaticFields());
+    processStaticMethods(jsParser.getStaticMethods());
     writeFiles(printer, jsFiles, outputPath);
   }
 

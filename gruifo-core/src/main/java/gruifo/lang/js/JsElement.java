@@ -43,7 +43,7 @@ public class JsElement {
   private JsTypeObject extendsType;
   private final List<JsTypeObject> implementsTypes = new ArrayList<>();
   private final List<JsParam> params = new ArrayList<>();
-  private List<JsParam> typeDef;
+  private List<JsParam> typeDef = new ArrayList<>();
   private JsTypeObject type;
   private JsTypeObject returnType;
   private boolean override;

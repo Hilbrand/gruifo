@@ -70,7 +70,7 @@ public class JSNIEnumPrinter {
     buffer.append("class ");
     buffer.append(enumName);
     buffer.append(" extends ");
-    buffer.append(TypeMapper.GWT_JAVA_SCRIPT_OBJECT);
+    buffer.append(TypeMapper2.GWT_JAVA_SCRIPT_OBJECT);
     buffer.append(" {");
     PrintUtil.nl(buffer);
     printEnumValues(buffer, indent + 1, packageName, enumName, enumValues);

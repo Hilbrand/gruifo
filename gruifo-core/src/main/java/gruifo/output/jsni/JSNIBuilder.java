@@ -41,7 +41,7 @@ public class JSNIBuilder implements FilePrinter {
 
   @Override
   public boolean ignored(final JsFile jsFile) {
-    return TypeMapper.INSTANCE.ignore(
+    return TypeMapper2.INSTANCE.ignore(
         jsFile.getPackageName() + '.' + jsFile.getClassOrInterfaceName());
   }
 

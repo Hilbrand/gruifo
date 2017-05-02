@@ -20,8 +20,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.cli.ParseException;
 
-import gruifo.output.jsni.TypeMapper;
-
 /**
  * Main class.
  */
@@ -38,7 +36,6 @@ public final class GruifoCli {
       return;
     }
     final OutputType outputType = determineOutputType(cmdOptions);
-    TypeMapper.INSTANCE.addMappings(cmdOptions.getTypeMappingProperties());
 
     final Controller controller = new Controller(cmdOptions.getSourcePaths(),
         cmdOptions.getTargetDir(), cmdOptions.getTypeMappingFile(),

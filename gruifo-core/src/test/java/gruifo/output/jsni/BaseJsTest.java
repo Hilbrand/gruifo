@@ -17,7 +17,6 @@ package gruifo.output.jsni;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import gruifo.GruifoCli;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +28,8 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 import org.apache.commons.cli.ParseException;
+
+import gruifo.GruifoCli;
 
 
 public abstract class BaseJsTest {
@@ -51,7 +52,7 @@ public abstract class BaseJsTest {
 
   private void parse() throws IOException, ParseException {
     final String typeMappingFile =
-        getClass().getResource("type_mapper.properties").getPath();
+        getClass().getResource("default_mapper.json").getPath();
     final String src = getClass().getResource(".").getFile()
         + "../../parser/"+ jsFileName + ".js";
     GruifoCli.main(new String[] {"-src", src, "-target", targetPath,

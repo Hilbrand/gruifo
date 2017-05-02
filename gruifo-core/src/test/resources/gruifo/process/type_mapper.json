@@ -1,0 +1,12 @@
+{
+  "replace": {
+    "ol.proj.ProjectionLike": "ol.proj.Projection|string",
+    "ArrayBuffer": "com.google.gwt.core.client.JavaScriptObject"
+  },
+  "skip": [
+    "ol.format.WMSCapabilities#read"
+  ],
+  "type": {
+    "ol.format.WKT.Parser#match#type": "ol.format.WKT.TokenType"
+  }
+}

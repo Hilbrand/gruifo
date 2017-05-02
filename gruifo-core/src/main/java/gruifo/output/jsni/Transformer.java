@@ -29,13 +29,14 @@ import com.squareup.javapoet.TypeName;
 
 import gruifo.lang.java.JClass;
 import gruifo.lang.java.JMethod;
-import gruifo.lang.java.JParam;
+import gruifo.lang.java.JVar;
 import gruifo.lang.js.JsEnum;
 import gruifo.lang.js.JsFile;
 import gruifo.lang.js.JsMethod;
 import gruifo.lang.js.JsParam;
 import gruifo.lang.js.JsType;
 import gruifo.lang.js.JsTypeObject;
+import gruifo.output.util.TypeMapper;
 
 /**
  * Transforms JavaScript into Java.
@@ -43,7 +44,7 @@ import gruifo.lang.js.JsTypeObject;
 class Transformer {
 
   private static final Logger LOG = LoggerFactory.getLogger(Transformer.class);
-  private static final TypeMapper TYPE_MAPPER = TypeMapper.INSTANCE;
+  private static final TypeMapper TYPE_MAPPER = new TypeMapper();
 
   private final Set<String> ignoreMethods = new HashSet<>();
 
@@ -67,8 +68,8 @@ class Transformer {
     }
     setExtends(jFile, jsFile);
     setImplements(jFile, jsFile);
-    transformEnumFields(jFile, jsFile.getElement().getEnumType(),
-        jsFile.getEnumValues());
+    //FIXME    transformEnumFields(jFile, jsFile.getElement().getEnumType(),
+    //        jsFile.getEnumValues());
     transformFields(jFile, jsFile.getFields());
     transformMethods(jsFile, jFile);
     return jFile;
@@ -82,9 +83,9 @@ class Transformer {
       canonicalPath = orgFilename;
     }
     jFile.setHeaderComment(
-          " This file was generated with gruifo.\n"
-        + " You probably don't want to edit this file.\n"
-        + " Generated from: " + canonicalPath.replace('\\', '/') + "\n");
+        " This file was generated with gruifo.\n"
+            + " You probably don't want to edit this file.\n"
+            + " Generated from: " + canonicalPath.replace('\\', '/') + "\n");
   }
 
   private void transformEnumFields(final JClass jFile, final JsType enumType,
@@ -94,8 +95,8 @@ class Transformer {
       jFile.setSuperclass(null); //FIXME why doesn't set dataclass alone not work?
     }
     for (final JsEnum enumValue: list) {
-//FIXME      jFile.addEnumValue(enumValue.getFieldName(),
-//          transformSingleType(enumType), enumValue.getJsDoc());
+      //FIXME      jFile.addEnumValue(enumValue.getFieldName(),
+      //          transformSingleType(enumType), enumValue.getJsDoc());
     }
   }
 
@@ -118,41 +119,41 @@ class Transformer {
   private void setExtends(final JClass jFile, final JsFile jsFile) {
     final JsTypeObject extendsType = jsFile.getElement().getExtends();
     if (jsFile.getElement().getGenericType() != null) {
-//FIXME      jFile.setClassGeneric(
-//          TYPE_MAPPER.mapType(jsFile.getElement().getGenericType()));
+      //FIXME      jFile.setClassGeneric(
+      //          TYPE_MAPPER.mapType(jsFile.getElement().getGenericType()));
     }
     if (jFile.isDataClass()) {
       jFile.setSuperclass(null);
     } else {
       jFile.setSuperclass(extendsType == null
-          ? TypeMapper.GWT_JAVA_SCRIPT_OBJECT
-              : transformSingleType(extendsType));
+          ? TypeMapper2.GWT_JAVA_SCRIPT_OBJECT
+              : transformSingleType((JsType) extendsType));
     }
   }
 
   private void setImplements(final JClass jFile, final JsFile jsFile) {
-    final List<JsType> implementsTypes = jsFile.getElement().getImplements();
-    for (final JsType jsType : implementsTypes) {
-      jFile.addSuperinterface(transformSingleType(jsType));
+    for (final JsTypeObject jsType : jsFile.getElement().getImplements()) {
+      jFile.addSuperinterface(transformSingleType((JsType) jsType));
     }
   }
 
   private void transformFields(final JClass jFile,
       final List<JsParam> jsFields) {
     for (final JsParam jsParam : jsFields) {
-      if (!TYPE_MAPPER.ignore(jFile.getFullClassName(), jsParam.getName())) {
-        final List<TypeName> types = transformType(jsParam.getType());
-        for (final TypeName type: types) {
-          final JParam field = filterParam(jFile,
-              jFile.addField(jsParam.getName(), type));
-          field.setMultiField(types.size() > 1);
-          if (jsParam.getElement() != null) {
-            field.setJavaDoc(jsParam.getElement().getJsDoc());
-            field.setStatic(jsParam.getElement().isConst());
-            field.setFinal(jsParam.getElement().isDefine());
-          }
+      //      if (!TYPE_MAPPER.ignore(jFile.getFullClassName(), jsParam.getName())) {
+      final List<TypeName> types = transformType((JsType) jsParam.getType());
+      for (final TypeName type: types) {
+        final JVar field = jFile.addField(jsParam.getName(), type);
+        //            filterParam(jFile,
+        //            jFile.addField(jsParam.getName(), type));
+        //          field.setMultiField(types.size() > 1);
+        if (jsParam.getElement() != null) {
+          field.setJavaDoc(jsParam.getElement().getJsDoc());
+          field.setStatic(jsParam.getElement().isConst());
+          field.setFinal(jsParam.getElement().isDefine());
         }
       }
+      //      }
     }
   }
 
@@ -161,7 +162,7 @@ class Transformer {
         || jsMethod.getElement().isOverride()
         || jsMethod.getElement().isPrivate()
         || jsMethod.getElement().isProtected()
-        || TYPE_MAPPER.ignore(clazz, jsMethod.getMethodName())
+        //        || TYPE_MAPPER.ignore(clazz, jsMethod.getMethodName())
         || "clone".equals(jsMethod.getMethodName()); // FIXME clone
   }
 
@@ -169,7 +170,7 @@ class Transformer {
   private JMethod transformMethod(final JClass jFile, final JsMethod jsMethod) {
     final JMethod jMethod = new JMethod(jsMethod.getPackageName(),
         jsMethod.getMethodName(), jsMethod.getModifiers());
-    jMethod.setJsDoc(jsMethod.getElement().getJsDoc());
+    jMethod.setJavaDoc(jsMethod.getElement().getJsDoc());
     jMethod.setAbstract(jsMethod.isAbstractMethod());
     jMethod.setStatic(jsMethod.isStaticMethod());
     setReturnType(jsMethod, jMethod);
@@ -186,14 +187,14 @@ class Transformer {
    * @param param
    * @return
    */
-  private JParam filterParam(final JClass jFile, final JParam param) {
-    final TypeName replaceType =
-        TYPE_MAPPER.replaceType(jFile.getFullClassName(), param.getName());
-    if (replaceType != null) {
-      param.setType(replaceType);
-    }
-    return param;
-  }
+  //  private JParam filterParam(final JClass jFile, final JParam param) {
+  //    final TypeName replaceType =
+  //        TYPE_MAPPER.map(param.getType());
+  //    if (replaceType != null) {
+  //      param.setType(replaceType);
+  //    }
+  //    return param;
+  //  }
 
   /**
    * Replace the type for the parameter if a type is set in the configuration.
@@ -202,39 +203,39 @@ class Transformer {
    * @param param
    * @return
    */
-  private JParam filterParam(final JClass jFile, final JMethod jMethod,
-      final JParam param) {
-    final TypeName replaceType = TYPE_MAPPER.replaceType(
-        jFile.getFullClassName(), jMethod.getMethodName(), param.getName());
-    if (replaceType != null) {
-      param.setType(replaceType);
-    }
-    return param;
+  private JVar filterParam(final JClass jFile, final JMethod jMethod,
+      final JsParam param) {
+    //    final TypeName replaceType = TYPE_MAPPER.replaceType(
+    //        jFile.getFullClassName(), jMethod.getName(), param.getName());
+    //    if (replaceType != null) {
+    //      param.setType(replaceType);
+    //    }
+    return new JVar(param.getName(), TYPE_MAPPER.map(param.getType()));
   }
 
   private void setReturnType(final JsMethod jsMethod, final JMethod jMethod) {
     jMethod.setGenericType(jsMethod.getElement().getGenericType());
     final boolean voidReturn = jsMethod.getElement().getReturn() == null;
-    jMethod.setReturn(voidReturn ? TypeName.VOID
-        : transformSingleType(jsMethod.getElement().getReturn()));
+    jMethod.setType(voidReturn ? TypeName.VOID
+        : transformSingleType((JsType) jsMethod.getElement().getReturn()));
   }
 
   private List<TypeName> transformType(final JsType jsType) {
     final List<TypeName> types = new ArrayList<>();
-    final TypeName mapRawType = mapRawType(jsType.getName());
+    final TypeName mapRawType = TYPE_MAPPER.map(jsType);
     if (mapRawType == null) {
-      if (jsType.getChoices().isEmpty()) {
-        //        LOG.error("Type empty: {}", jsType);
-        //        types.add(TypeMapper.GWT_JAVA_SCRIPT_OBJECT);
-        types.add(tranformVarargs(jsType, transformType(jsType, true)));
-      } else {
-        final List<TypeName> sTypes =
-            tranformTypeList(jsType, jsType.getChoices());
-        for (final TypeName type : sTypes) {
-          types.add(tranformVarargs(jsType, type));
-        }
-        //transformType(jsType.getTypes().get(0), false)
-      }
+      //      if (jsType.getChoices().isEmpty()) {
+      //        LOG.error("Type empty: {}", jsType);
+      //        types.add(TypeMapper.GWT_JAVA_SCRIPT_OBJECT);
+      types.add(tranformVarargs(jsType, transformType(jsType, true)));
+      //      } else {
+      //        final List<TypeName> sTypes =
+      //            tranformTypeList(jsType, jsType.getChoices());
+      //        for (final TypeName type : sTypes) {
+      //          types.add(tranformVarargs(jsType, type));
+      //        }
+      //        //transformType(jsType.getTypes().get(0), false)
+      //      }
     } else {
       types.add(tranformVarargs(jsType, mapRawType));
     }
@@ -247,19 +248,14 @@ class Transformer {
 
   private TypeName transformSingleType(final JsType jsType) {
     final TypeName type;
-    final TypeName mapRawType = mapRawType(jsType.getRawType());
+    final TypeName mapRawType = TYPE_MAPPER.map(jsType);
     if (mapRawType == null) {
-      if (jsType.getChoices().isEmpty()) {
-        final TypeName transformedType = transformType(jsType, true);
-        if (transformedType == null) {
-          LOG.error("Type for single type conversion empty:{}", jsType);
-          type = TypeMapper.GWT_JAVA_SCRIPT_OBJECT;
-        } else {
-          type = transformedType;
-        }
+      final TypeName transformedType = transformType(jsType, true);
+      if (transformedType == null) {
+        LOG.error("Type for single type conversion empty:{}", jsType);
+        type = TypeMapper2.GWT_JAVA_SCRIPT_OBJECT;
       } else {
-        LOG.debug("More then 1 type: {}", jsType);
-        type = TypeMapper.GWT_JAVA_SCRIPT_OBJECT;
+        type = transformedType;
       }
     } else {
       type = mapRawType;
@@ -273,38 +269,34 @@ class Transformer {
    * @param rawType raw type to map
    * @return mapped raw type or null
    */
-  private TypeName mapRawType(final String rawType) {
-    return rawType == null ? null : TYPE_MAPPER.mapType(rawType).equals(rawType)
-        ? null : TYPE_MAPPER.mapType(rawType);
-  }
+  //    private TypeName mapRawType(final String rawType) {
+  //      return rawType == null ? null : TYPE_MAPPER.mapType(rawType).equals(rawType)
+  //          ? null : TYPE_MAPPER.mapType(rawType);
+  //    }
 
   private TypeName transformType(final JsType jsType, final boolean generic) {
     TypeName type;
     if (jsType.isFunction()) {
-      type = TypeMapper.GWT_JAVA_SCRIPT_OBJECT;
+      type = TypeMapper2.GWT_JAVA_SCRIPT_OBJECT;
     } else if (jsType.isGeneric()) {
-      if (jsType.getChoices().size() > 1) {
-        type = TypeMapper.GWT_JAVA_SCRIPT_OBJECT;
-      } else {
-        type = mapRawType(jsType.getRawType());
-        if (type == null) {
-          final TypeName mappedType = TYPE_MAPPER.mapType(jsType.getName(), generic);
-          if (TypeMapper.GWT_JAVA_SCRIPT_OBJECT.equals(mappedType)) {
-            type = TypeMapper.GWT_JAVA_SCRIPT_OBJECT;
-          } else {
-            type = TypeMapper.GWT_JAVA_SCRIPT_OBJECT;
+      type = TYPE_MAPPER.map(jsType);
+      if (type == null) {
+        //        final TypeName mappedType = TYPE_MAPPER.map;
+        //        if (TypeMapper2.GWT_JAVA_SCRIPT_OBJECT.equals(mappedType)) {
+        //          type = TypeMapper2.GWT_JAVA_SCRIPT_OBJECT;
+        //        } else {
+        type = TypeMapper2.GWT_JAVA_SCRIPT_OBJECT;
 
-//fixme
-            //            type = mappedType + '<'
-//                + join(tranformTypeList(jsType, jsType.getTypeList()))
-//                //              + (sType == null
-//                //              ? transformType(jsType.getTypeList().get(0), true) : sType)
-//                + '>';
-          }
-        }
+        //fixme
+        //            type = mappedType + '<'
+        //                + join(tranformTypeList(jsType, jsType.getTypeList()))
+        //                //              + (sType == null
+        //                //              ? transformType(jsType.getTypeList().get(0), true) : sType)
+        //                + '>';
+        //        }
       }
     } else {
-      type = TYPE_MAPPER.mapType(jsType.getName(), generic);
+      type = TYPE_MAPPER.map(jsType);
     }
     return type;
   }
@@ -323,19 +315,19 @@ class Transformer {
     return b.toString();
   }
 
-  private List<TypeName> tranformTypeList(final JsType jsType, final List<JsType> list) {
-    final List<TypeName> types = new ArrayList<>();
-    if (jsType.isFunction()) {
-      types.add(TypeMapper.GWT_JAVA_SCRIPT_OBJECT);
-    } else {
-      for (final JsType jsTypeSpec : list) {
-        final TypeName mapRawType = mapRawType(jsTypeSpec.getRawType());
-        types.add(
-            mapRawType == null ? transformType(jsTypeSpec, false) : mapRawType);
-      }
-    }
-    return types;
-  }
+  //  private List<TypeName> tranformTypeList(final JsType jsType, final List<JsType> list) {
+  //    final List<TypeName> types = new ArrayList<>();
+  //    if (jsType.isFunction()) {
+  //      types.add(TypeMapper2.GWT_JAVA_SCRIPT_OBJECT);
+  //    } else {
+  //      for (final JsType jsTypeSpec : list) {
+  //        final TypeName mapRawType = mapRawType(jsTypeSpec.getRawType());
+  //        types.add(
+  //            mapRawType == null ? transformType(jsTypeSpec, false) : mapRawType);
+  //      }
+  //    }
+  //    return types;
+  //  }
 
   //  private String tranformSpecificSubType(final JsType jsTypeSpec) {
   //    String specific = null;

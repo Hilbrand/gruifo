@@ -1,5 +1,21 @@
+/*
+ * Copyright Hilbrand Bouwkamp.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package gruifo.process;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collection;
@@ -24,9 +40,9 @@ class JsFilesMapper {
 
   private final Mapper mapper;
 
-  public JsFilesMapper(final String fileName, final Charset charSet)
+  public JsFilesMapper(final File mapperFile, final Charset charSet)
       throws JsonSyntaxException, IOException {
-    mapper = new Mapper(fileName, charSet);
+    mapper = new Mapper(mapperFile, charSet);
   }
 
   public Collection<JsFile> mapFiles(final Collection<JsFile> jsFiles) {
@@ -53,7 +69,7 @@ class JsFilesMapper {
 
   private void mapEnums(final List<JsEnum> enumValues) {
     for (final JsEnum jsEnum : enumValues) {
-//      mapParam(jsEnum.getFieldName());
+      //      mapParam(jsEnum.getFieldName());
     }
   }
 
@@ -71,6 +87,7 @@ class JsFilesMapper {
   }
 
   private void mapParam(final JsParam jsParam) {
+    //  jFile.getFullClassName(), jMethod.getMethodName(), param.getName()
     jsParam.setType(mapJsObject(jsParam.getType()));
   }
 
@@ -81,6 +98,11 @@ class JsFilesMapper {
   }
 
   private JsTypeObject mapJsObject(final JsTypeObject jsObject) {
+    final String replaced =
+        jsObject == null ? null : mapper.replace(jsObject.getRawType());
+    if (replaced != null) {
+
+    }
     return jsObject;
   }
 

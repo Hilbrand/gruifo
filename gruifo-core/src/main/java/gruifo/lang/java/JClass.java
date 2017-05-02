@@ -53,7 +53,7 @@ public class JClass {
   private final String packageName;
   private String classDescription;
   private final String classOrInteraceName;
-  private final List<JParam> fields = new ArrayList<>();;
+  private final List<JVar> fields = new ArrayList<>();
   private final List<JMethod> methods = new ArrayList<>();
   private final List<EnumValue> enumValues = new ArrayList<>();
   private final List<JClass> innerJFil = new ArrayList<>();
@@ -81,8 +81,8 @@ public class JClass {
     enumValues.add(new EnumValue(name, value, jsDoc));
   }
 
-  public JParam addField(final String name, final TypeName type) {
-    final JParam jParam = new JParam(name, type);
+  public JVar addField(final String name, final TypeName type) {
+    final JVar jParam = new JVar(name, type);
     fields.add(jParam);
     return jParam;
   }
@@ -117,7 +117,7 @@ public class JClass {
     return enumValues;
   }
 
-  public List<JParam> getFields() {
+  public List<JVar> getFields() {
     return fields;
   }
 
@@ -159,7 +159,7 @@ public class JClass {
 
   public boolean hasAbstractMethods() {
     for (final JMethod jMethod : methods) {
-      if (jMethod.isAbstractMethod()) {
+      if (jMethod.isAbstract()) {
         return true;
       }
     }

@@ -15,6 +15,9 @@
  */
 package gruifo.lang.js;
 
+/**
+ *
+ */
 public class JsTypeObject {
 
   private final String rawType;

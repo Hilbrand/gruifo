@@ -18,6 +18,9 @@ package gruifo.lang.js;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ *
+ */
 public class JsTypeList extends JsTypeObject {
 
   private final List<JsTypeObject> types = new ArrayList<>();
@@ -30,7 +33,7 @@ public class JsTypeList extends JsTypeObject {
     types.add(type);
   }
 
-  public void add(final List<JsTypeObject> jsTypes) {
+  public void addAll(final List<JsTypeObject> jsTypes) {
     types.addAll(jsTypes);
   }
 

@@ -25,35 +25,24 @@ import java.util.Set;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 
-public final class TypeMapper {
+/**
+ * This class is replaced by the TypeMapper in util and gson mapper reader.
+ * @deprecated old TypeMapper
+ */
+@Deprecated
+public final class TypeMapper2 {
   private static final String DOM_CLIENT = "com.google.gwt.dom.client";
   private static final String CORE_CLIENT = "com.google.gwt.core.client";
   static final TypeName GWT_JAVA_SCRIPT_OBJECT =
       ClassName.get(CORE_CLIENT, "JavaScriptObject");
 
-  public static final TypeMapper INSTANCE = new TypeMapper();
+  public static final TypeMapper2 INSTANCE = new TypeMapper2();
 
   private final Map<String, TypeName> mapper = new HashMap<>();
   private final Set<String> ignores = new HashSet<>();
   private final Map<String, String> replaceTypes = new HashMap<>();
 
-  private TypeMapper() {
-    primitiveMapper.put("void", TypeName.VOID);
-    primitiveMapper.put("string", TypeName.get(String.class));
-    primitiveMapper.put("int", TypeName.INT);
-    primitiveMapper.put("double", TypeName.DOUBLE);
-    primitiveMapper.put("float", TypeName.FLOAT);
-    primitiveMapper.put("boolean", TypeName.BOOLEAN);
-    primitiveMapper.put("number", TypeName.DOUBLE);
-
-    genericMapper.put("void", TypeName.VOID.box());
-    genericMapper.put("string", TypeName.get(String.class));
-    genericMapper.put("int", TypeName.INT.box());
-    genericMapper.put("double", TypeName.DOUBLE.box());
-    genericMapper.put("float", TypeName.FLOAT.box());
-    genericMapper.put("boolean", TypeName.BOOLEAN.box());
-    genericMapper.put("number", TypeName.DOUBLE.box());
-
+  private TypeMapper2() {
     mapper.put("*", GWT_JAVA_SCRIPT_OBJECT);
     mapper.put("object", GWT_JAVA_SCRIPT_OBJECT);
     mapper.put("Object", GWT_JAVA_SCRIPT_OBJECT);
@@ -99,15 +88,15 @@ public final class TypeMapper {
    * @param typeToCheck type to check
    * @return true if is primitive
    */
-  public boolean isPrimitive(final String typeToCheck) {
-    return primitiveMapper.containsKey(typeToCheck);
-  }
-
-  public TypeName mapType(final String typeToMap, final boolean generic) {
-    return generic ?
-        genericMapper.containsKey(typeToMap) ? mapGenericType(typeToMap)
-            : mapOtherType(typeToMap): mapType(typeToMap);
-  }
+  //  public boolean isPrimitive(final String typeToCheck) {
+  //    return primitiveMapper.containsKey(typeToCheck);
+  //  }
+  //
+  //  public TypeName mapType(final String typeToMap, final boolean generic) {
+  //    return generic ?
+  //        genericMapper.containsKey(typeToMap) ? mapGenericType(typeToMap)
+  //            : mapOtherType(typeToMap): mapType(typeToMap);
+  //  }
 
   /**
    * Returns the type matching the typeToMap or the value passed if it doesn't
@@ -115,25 +104,25 @@ public final class TypeMapper {
    * @param typeToMap
    * @return
    */
-  public TypeName mapType(final String typeToMap) {
-    return primitiveMapper.containsKey(typeToMap)
-        ? mapPrimitiveType(typeToMap) : mapOtherType(typeToMap);
-  }
+  //  public TypeName mapType(final String typeToMap) {
+  //    return primitiveMapper.containsKey(typeToMap)
+  //        ? mapPrimitiveType(typeToMap) : mapOtherType(typeToMap);
+  //  }
 
   private TypeName mapOtherType(final String typeToMap) {
     return mapper.containsKey(typeToMap)
         ? mapper.get(typeToMap) : string2Class(typeToMap);
   }
 
-  private TypeName mapGenericType(final String typeToMap) {
-    return genericMapper.containsKey(typeToMap)
-        ? genericMapper.get(typeToMap) : string2Class(typeToMap);
-  }
-
-  private TypeName mapPrimitiveType(final String typeToMap) {
-    return primitiveMapper.containsKey(typeToMap)
-        ? primitiveMapper.get(typeToMap) : string2Class(typeToMap);
-  }
+  //  private TypeName mapGenericType(final String typeToMap) {
+  //    return genericMapper.containsKey(typeToMap)
+  //        ? genericMapper.get(typeToMap) : string2Class(typeToMap);
+  //  }
+  //
+  //  private TypeName mapPrimitiveType(final String typeToMap) {
+  //    return primitiveMapper.containsKey(typeToMap)
+  //        ? primitiveMapper.get(typeToMap) : string2Class(typeToMap);
+  //  }
 
   public TypeName replaceType(final String fullClassName,
       final String methodName, final String name) {

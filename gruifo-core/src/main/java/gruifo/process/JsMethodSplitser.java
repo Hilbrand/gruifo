@@ -13,14 +13,16 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package gruifo.parser;
+package gruifo.process;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import gruifo.lang.js.JsFile;
 import gruifo.lang.js.JsMethod;
 import gruifo.lang.js.JsParam;
+import gruifo.lang.js.JsType;
 import gruifo.lang.js.JsTypeList;
 import gruifo.lang.js.JsTypeObject;
 
@@ -29,6 +31,13 @@ import gruifo.lang.js.JsTypeObject;
  * methods.
  */
 class JsMethodSplitser {
+
+  public Collection<JsFile> splitFiles(final Collection<JsFile> files) {
+    for (final JsFile jsFile : files) {
+      splitMethodsInClass(jsFile);
+    }
+    return files;
+  }
 
   /**
    *
@@ -46,6 +55,7 @@ class JsMethodSplitser {
       for (final List<JsParam> params : jParamList) {
         final JsMethod splitMethod = new JsMethod(jsMethod);
         splitMethod.setParams(params);
+        allMethods.add(splitMethod);
       }
     }
     jsFile.getMethods().clear();
@@ -61,12 +71,12 @@ class JsMethodSplitser {
   private List<List<JsParam>> splitMethodParamsOptional(
       final List<JsParam> jsParams) {
     final List<List<JsParam>> params = new ArrayList<>();
-    List<JsParam> current = new ArrayList<JsParam>();
+    List<JsParam> current = new ArrayList<>();
     params.add(current);
     for (int i = 0; i < jsParams.size(); i++) {
       final JsParam jsParam = jsParams.get(i);
       if (jsParam.getType().isOptional()) {
-        current = new ArrayList<JsParam>(params.get(params.size() - 1));
+        current = new ArrayList<>(params.get(params.size() - 1));
         params.add(current);
       }
       current.add(jsParam);
@@ -86,13 +96,27 @@ class JsMethodSplitser {
     params.add(new ArrayList<JsParam>());
     for (int i = 0; i < jsParams.size(); i++) {
       final JsParam jsParam = jsParams.get(i);
-      if (jsParam.getType() instanceof JsTypeList) {
+      if (isMultiTypeParam(jsParam.getType())) {
         expandChoices(params, jsParam);
       } else {
         addSingleParam(params, jsParam);
       }
     }
     return params;
+  }
+
+  private boolean isMultiTypeParam(final JsTypeObject jsTypeObject) {
+    if (jsTypeObject instanceof JsTypeList) {
+      return true;
+    }
+    if (jsTypeObject instanceof JsType) {
+      for (final JsTypeObject jso : ((JsType) jsTypeObject).getTypeList()) {
+        if (isMultiTypeParam(jso)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**
@@ -126,8 +150,7 @@ class JsMethodSplitser {
 
   private List<JsParam> optionParam2List(final JsParam jsParam) {
     final List<JsParam> splitParams = new ArrayList<>();
-    for (final JsTypeObject innerJsParam :
-      ((JsTypeList) jsParam.getType()).getTypes()) {
+    for (final JsTypeObject innerJsParam : getTypes(jsParam.getType())) {
       if (!isDuplicate(splitParams, innerJsParam)) {
         final JsParam newJsParam =
             new JsParam(jsParam.getName(), jsParam.getElement());
@@ -138,26 +161,66 @@ class JsMethodSplitser {
     return splitParams;
   }
 
-  private boolean isDuplicate(final List<JsParam> splitParams,
-      final JsTypeObject typeObject) {
-    boolean duplicate = false;
-    for (final JsParam jParam : splitParams) {
-      if (typeObject.equals(jParam.getType())) {
-        duplicate = true;
-      }
+  private List<JsTypeObject> getTypes(final JsTypeObject jsParamType) {
+    final List<JsTypeObject> types = new ArrayList<>();
+    if (jsParamType instanceof JsType) {
+      types.addAll(getJsType((JsType) jsParamType));
+    } else if (jsParamType instanceof JsTypeList) {
+      types.addAll(getJsTypeList(((JsTypeList) jsParamType).getTypes()));
     }
-    return duplicate;
+    return types;
   }
 
-  /**
-   * Add the given jsParam to each list in params.
-   * @param params List of combinations of List of parameters.
-   * @param jsParam parameter to add.
-   */
-  private void addSingleParam(final List<List<JsParam>> params,
-      final JsParam jsParam) {
-    for (final List<JsParam> list : params) {
-      list.add(jsParam);
+  private List<JsTypeObject> getJsType(final JsType jsType) {
+    final List<JsTypeObject> types = new ArrayList<>();
+    for (final JsTypeObject jsTypeObject : getJsTypeList(jsType.getTypeList())) {
+      final JsType type = new JsType(jsType.getName(), jsType.getRawType());
+      type.getTypeList().add(jsTypeObject);
+    }
+    return types;
+  }
+
+  private List<JsTypeObject> getJsTypeList(
+      final List<JsTypeObject> list) {
+    final List<JsTypeObject> types = new ArrayList<>();
+    return types;
+  }
+
+  final List<JsTypeObject> list = ((JsTypeList) jsParam.getType()).getTypes();
+  for (final JsTypeObject jsTypeObject : list) {
+    if (jsTypeObject instanceof JsType) {
+      if (((JsType) jsTypeObject).getTypeList().size() > 1) {
+
+      } else {
+        types.add(jsTypeObject);
+      }
+    } else if (jsTypeObject instanceof JsTypeList) {
+
     }
   }
+  return types;
+}
+
+private boolean isDuplicate(final List<JsParam> splitParams,
+    final JsTypeObject typeObject) {
+  boolean duplicate = false;
+  for (final JsParam jParam : splitParams) {
+    if (typeObject.equals(jParam.getType())) {
+      duplicate = true;
+    }
+  }
+  return duplicate;
+}
+
+/**
+ * Add the given jsParam to each list in params.
+ * @param params List of combinations of List of parameters.
+ * @param jsParam parameter to add.
+ */
+private void addSingleParam(final List<List<JsParam>> params,
+    final JsParam jsParam) {
+  for (final List<JsParam> list : params) {
+    list.add(jsParam);
+  }
+}
 }

@@ -13,7 +13,9 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package gruifo.parser;
+package gruifo.process;
+
+import gruifo.process.JsMethodSplitser;
 
 /**
  * Test class for {@link JsMethodSplitser}.

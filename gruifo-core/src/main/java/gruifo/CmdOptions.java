@@ -16,13 +16,10 @@
 package gruifo;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -58,7 +55,7 @@ class CmdOptions {
   private static final Option TARGET_PATH_OPTION =
       new Option(TARGET_PATH, true, "output directory");
   private static final Option TYPE_MAPPING_OPTION =
-      new Option(TYPE_MAPPING, true, "properties file with type mapping");
+      new Option(TYPE_MAPPING, true, "json file with type mapping");
 
   private final Options options;
   private final CommandLine cmd;
@@ -104,22 +101,16 @@ class CmdOptions {
     return file;
   }
 
-  public String getTypeMappingFile() {
-    return cmd.hasOption(TYPE_MAPPING) ? cmd.getOptionValue(TYPE_MAPPING) : "";
-  }
-
-  public Properties getTypeMappingProperties()
-      throws FileNotFoundException, IOException {
-    final Properties props = new Properties();
+  public File getTypeMappingFile() throws FileNotFoundException, IOException {
     if (cmd.hasOption(TYPE_MAPPING)) {
       final File localFile = new File(cmd.getOptionValue(TYPE_MAPPING));
       if (localFile.exists()) {
-        try (final InputStream is = new FileInputStream(localFile)) {
-          props.load(is);
-        }
+        return localFile;
       }
+      new FileNotFoundException("given mapping file '" + localFile
+          + "' could not be found");
     }
-    return props;
+    return null;
   }
 
   public boolean isJSInterop() {
