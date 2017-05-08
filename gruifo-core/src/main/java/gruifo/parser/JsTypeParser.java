@@ -26,7 +26,7 @@ import gruifo.lang.js.JsTypeObject;
 /**
  * Parse the types of @param, @return and @type elements.
  */
-class JsTypeParser {
+public class JsTypeParser {
 
   private static final String FUNCTION = "function(";
 

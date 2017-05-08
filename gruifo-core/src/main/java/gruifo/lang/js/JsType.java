@@ -24,7 +24,7 @@ import java.util.List;
 public class JsType extends JsTypeObject {
 
   private final List<JsTypeObject> typeList = new ArrayList<>();
-  private final String name;
+  private String name;
 
   public JsType(final String rawType) {
     this(null, rawType);
@@ -37,6 +37,10 @@ public class JsType extends JsTypeObject {
 
   public String getName() {
     return name;
+  }
+
+  public void setName(final String name) {
+    this.name = name;
   }
 
   public void addGenericType(final JsType type) {

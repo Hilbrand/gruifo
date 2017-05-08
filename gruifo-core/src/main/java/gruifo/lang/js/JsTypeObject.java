@@ -18,7 +18,7 @@ package gruifo.lang.js;
 /**
  *
  */
-public class JsTypeObject {
+public abstract class JsTypeObject {
 
   private final String rawType;
   private boolean _function;

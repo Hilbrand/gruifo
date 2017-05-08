@@ -45,15 +45,14 @@ class JsMethodSplitser {
    */
   public void splitMethodsInClass(final JsFile jsFile) {
     final List<JsMethod> allMethods = new ArrayList<>();
-    for(final JsMethod jsMethod: jsFile.getMethods()) {
-      final List<List<JsParam>> list =
-          splitMethodParamsOptional(jsMethod.getParams());
+    for (final JsMethod jsMethod : jsFile.getMethods()) {
+      final List<List<JsParam>> list = splitMethodParamsOptional(jsMethod.getParams());
       final List<List<JsParam>> jParamList = new ArrayList<>();
       for (final List<JsParam> innerList : list) {
         jParamList.addAll(split2MethodParamsMulti(innerList));
       }
       for (final List<JsParam> params : jParamList) {
-        final JsMethod splitMethod = new JsMethod(jsMethod);
+        final JsMethod splitMethod = jsMethod.clone();
         splitMethod.setParams(params);
         allMethods.add(splitMethod);
       }
@@ -63,8 +62,9 @@ class JsMethodSplitser {
   }
 
   /**
-   * Creates multiple parameter lists if a parameter is optional. If a
-   * parameter is optional a parameter list if added without this parameter.
+   * Creates multiple parameter lists if a parameter is optional. If a parameter
+   * is optional a parameter list if added without this parameter.
+   *
    * @param jsParams List of parameters
    * @return List of List of parameters
    */
@@ -72,14 +72,21 @@ class JsMethodSplitser {
       final List<JsParam> jsParams) {
     final List<List<JsParam>> params = new ArrayList<>();
     List<JsParam> current = new ArrayList<>();
-    params.add(current);
-    for (int i = 0; i < jsParams.size(); i++) {
-      final JsParam jsParam = jsParams.get(i);
-      if (jsParam.getType().isOptional()) {
-        current = new ArrayList<>(params.get(params.size() - 1));
-        params.add(current);
+    int last = jsParams.size();
+    boolean addMore = true;
+    while (addMore) {
+      addMore = false;
+      params.add(current);
+      final int loopLast = last;
+      for (int i = 0; i < loopLast; i++) {
+        final JsParam jsParam = jsParams.get(i);
+        if (jsParam.getType().isOptional()) {
+          last = i;
+          addMore = true;
+        }
+        current.add(jsParam);
       }
-      current.add(jsParam);
+      current = new ArrayList<>();
     }
     return params;
   }
@@ -87,11 +94,11 @@ class JsMethodSplitser {
   /**
    * Creates multiple parameters lists if a parameter type contains multiple
    * types.
+   *
    * @param jsParams
    * @return
    */
-  private List<List<JsParam>> split2MethodParamsMulti(
-      final List<JsParam> jsParams) {
+  private List<List<JsParam>> split2MethodParamsMulti(final List<JsParam> jsParams) {
     final List<List<JsParam>> params = new ArrayList<>();
     params.add(new ArrayList<JsParam>());
     for (int i = 0; i < jsParams.size(); i++) {
@@ -120,19 +127,20 @@ class JsMethodSplitser {
   }
 
   /**
-   * Add new lists for each choice.
-   * The lists are alternating replicated and then sequential added:
+   * Add new lists for each choice. The lists are alternating replicated and
+   * then sequential added:
+   *
    * <pre>
    *   A => A C
    *   B    B C
    *        A D
    *        B D
    * </pre>
+   *
    * @param params List of combinations of List of parameters.
    * @param jsParam choice parameters to add.
    */
-  private void expandChoices(final List<List<JsParam>> params,
-      final JsParam jsParam) {
+  private void expandChoices(final List<List<JsParam>> params, final JsParam jsParam) {
     final List<JsParam> splitParams = optionParam2List(jsParam);
     final int currentSize = params.size();
     // Add new lists matching the number of choices.
@@ -141,7 +149,7 @@ class JsMethodSplitser {
         params.add(new ArrayList<>(params.get(j)));
       }
     }
-    for (int j = 0; j < splitParams.size();j++) {
+    for (int j = 0; j < splitParams.size(); j++) {
       for (int k = 0; k < currentSize; k++) {
         params.get(k + j * currentSize).add(splitParams.get(j));
       }
@@ -152,8 +160,7 @@ class JsMethodSplitser {
     final List<JsParam> splitParams = new ArrayList<>();
     for (final JsTypeObject innerJsParam : getTypes(jsParam.getType())) {
       if (!isDuplicate(splitParams, innerJsParam)) {
-        final JsParam newJsParam =
-            new JsParam(jsParam.getName(), jsParam.getElement());
+        final JsParam newJsParam = new JsParam(jsParam.getName(), jsParam.getElement());
         newJsParam.setType(innerJsParam);
         splitParams.add(newJsParam);
       }
@@ -180,47 +187,33 @@ class JsMethodSplitser {
     return types;
   }
 
-  private List<JsTypeObject> getJsTypeList(
-      final List<JsTypeObject> list) {
+  private List<JsTypeObject> getJsTypeList(final List<JsTypeObject> list) {
     final List<JsTypeObject> types = new ArrayList<>();
+    for (final JsTypeObject jsTypeObject : list) {
+      types.addAll(getTypes(jsTypeObject));
+    }
     return types;
   }
 
-  final List<JsTypeObject> list = ((JsTypeList) jsParam.getType()).getTypes();
-  for (final JsTypeObject jsTypeObject : list) {
-    if (jsTypeObject instanceof JsType) {
-      if (((JsType) jsTypeObject).getTypeList().size() > 1) {
-
-      } else {
-        types.add(jsTypeObject);
+  private boolean isDuplicate(final List<JsParam> splitParams, final JsTypeObject typeObject) {
+    boolean duplicate = false;
+    for (final JsParam jParam : splitParams) {
+      if (typeObject.equals(jParam.getType())) {
+        duplicate = true;
       }
-    } else if (jsTypeObject instanceof JsTypeList) {
+    }
+    return duplicate;
+  }
 
+  /**
+   * Add the given jsParam to each list in params.
+   *
+   * @param params List of combinations of List of parameters.
+   * @param jsParam parameter to add.
+   */
+  private void addSingleParam(final List<List<JsParam>> params, final JsParam jsParam) {
+    for (final List<JsParam> list : params) {
+      list.add(jsParam);
     }
   }
-  return types;
-}
-
-private boolean isDuplicate(final List<JsParam> splitParams,
-    final JsTypeObject typeObject) {
-  boolean duplicate = false;
-  for (final JsParam jParam : splitParams) {
-    if (typeObject.equals(jParam.getType())) {
-      duplicate = true;
-    }
-  }
-  return duplicate;
-}
-
-/**
- * Add the given jsParam to each list in params.
- * @param params List of combinations of List of parameters.
- * @param jsParam parameter to add.
- */
-private void addSingleParam(final List<List<JsParam>> params,
-    final JsParam jsParam) {
-  for (final List<JsParam> list : params) {
-    list.add(jsParam);
-  }
-}
 }

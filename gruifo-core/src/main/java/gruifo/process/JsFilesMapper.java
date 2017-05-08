@@ -18,18 +18,19 @@ package gruifo.process;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import com.google.gson.JsonSyntaxException;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.TypeName;
 
 import gruifo.lang.js.JsElement;
 import gruifo.lang.js.JsEnum;
 import gruifo.lang.js.JsFile;
 import gruifo.lang.js.JsMethod;
 import gruifo.lang.js.JsParam;
+import gruifo.lang.js.JsType;
+import gruifo.lang.js.JsTypeList;
 import gruifo.lang.js.JsTypeObject;
 
 /**
@@ -98,18 +99,46 @@ class JsFilesMapper {
   }
 
   private JsTypeObject mapJsObject(final JsTypeObject jsObject) {
-    final String replaced =
-        jsObject == null ? null : mapper.replace(jsObject.getRawType());
-    if (replaced != null) {
-
+    if (jsObject instanceof JsType) {
+      return mapJsType((JsType) jsObject);
+    } else if (jsObject instanceof JsTypeList) {
+      return mapJsTypeList((JsTypeList) jsObject);
     }
     return jsObject;
   }
 
-  private TypeName string2TypeName(final String value) {
+  private JsTypeObject mapJsType(final JsType jsType) {
+    final String replacedName = mapper.replace(jsType.getName());
+    if (replacedName == null) {
+      final String replacedRawType = mapper.replace(jsType.getRawType());
+      if (replacedRawType != null) {
+        jsType.setName(replacedRawType);
+        jsType.getTypeList().clear();
+      }
+    } else {
+      jsType.setName(replacedName);
+    }
+    mapJsTypeList(jsType.getTypeList());
+    return jsType;
+  }
+
+  private JsTypeObject mapJsTypeList(final JsTypeList jsObject) {
+    mapJsTypeList(jsObject.getTypes());
+    return jsObject;
+  }
+
+  private void mapJsTypeList(final List<JsTypeObject> list) {
+    final List<JsTypeObject> types = new ArrayList<>();
+    for (final JsTypeObject jsTypeObject : list) {
+      types.add(mapJsObject(jsTypeObject));
+    }
+    list.clear();
+    list.addAll(types);
+  }
+
+  private String string2TypeName(final String value) {
     final int idx = value.lastIndexOf('.');
-    return ClassName.get(value.substring(0, idx),
-        value.substring(idx + 1));
+    return idx < 0 ? value : value.substring(idx + 1);
   }
 }
 

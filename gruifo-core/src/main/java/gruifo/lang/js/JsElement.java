@@ -23,7 +23,7 @@ import javax.lang.model.element.Modifier;
 /**
  * Represents JavaScript element.
  */
-public class JsElement {
+public class JsElement implements Cloneable {
 
   public static enum ElementType {
     CLASS,
@@ -42,7 +42,7 @@ public class JsElement {
   private String jsDoc;
   private JsTypeObject extendsType;
   private final List<JsTypeObject> implementsTypes = new ArrayList<>();
-  private final List<JsParam> params = new ArrayList<>();
+  private List<JsParam> params = new ArrayList<>();
   private List<JsParam> typeDef = new ArrayList<>();
   private JsTypeObject type;
   private JsTypeObject returnType;
@@ -53,6 +53,26 @@ public class JsElement {
 
   public void addImplements(final JsTypeObject jsTypeObject) {
     implementsTypes.add(jsTypeObject);
+  }
+
+  @Override
+  public JsElement clone() {
+    final JsElement clone = new JsElement();
+    clone.modifier = modifier;
+    clone.elementType = elementType;
+    clone.classDesc = classDesc;
+    clone.jsDoc = jsDoc;
+    clone.extendsType = extendsType;
+    clone.implementsTypes.addAll(implementsTypes);
+    clone.params.addAll(params);
+    clone.typeDef = new ArrayList<>(typeDef);
+    clone.type = type;
+    clone.returnType = returnType;
+    clone.override = override;
+    clone.genericType = genericType;
+    clone.define = define;
+    clone.enumType = enumType;
+    return clone;
   }
 
   public String getJsDoc() {
@@ -203,6 +223,10 @@ public class JsElement {
 
   public void setProtected() {
     modifier = Modifier.PROTECTED;
+  }
+
+  public void setParams(final List<JsParam> params) {
+    this.params = params;
   }
 
   public void setReturn(final JsTypeObject jsTypeObject) {

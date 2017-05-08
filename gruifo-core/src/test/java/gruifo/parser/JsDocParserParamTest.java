@@ -150,18 +150,6 @@ public class JsDocParserParamTest extends JsDocParserTestBase {
         paramType.get(1).getRawType());
   }
 
-  @Test
-  public void testChoiceParams2() {
-    assertEquals("param Object", "Object", getParamNameAtRow(19));
-//    final JsTypeList paramType = (JsTypeList) getParamTypeAtRow(19).getTypeList()get(19).getType();
-//    assertEquals("2 choices", 2, paramType.getTypes().size());
-//    assertEquals("1st choice", "nl.Object",
-//        ((JsType) paramType.get(0)).getName());
-//    assertEquals("2nd choice", "Object", ((JsType) paramType.get(1)).getName());
-//    assertEquals("2nd choice rawtype", "Object.<string, *>",
-//        paramType.get(1).getRawType());
-  }
-
   private String getParamNameAtRow(final int idx) {
     return getParamTypeAtRow(idx).getName();
   }

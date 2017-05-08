@@ -30,6 +30,7 @@ public class JVar {
   private final String name;
   private final EnumSet<Modifier> modifiers;
   private String javaDoc;
+  private boolean varArg;
 
   public JVar(final String name, final TypeName type) {
     this(name, type, EnumSet.noneOf(Modifier.class));
@@ -86,6 +87,10 @@ public class JVar {
     return modifiers.contains(Modifier.STATIC);
   }
 
+  public boolean isVarArg() {
+    return varArg;
+  }
+
   public void setAbstract(final boolean abstractModifier) {
     setModifier(abstractModifier, Modifier.ABSTRACT);
   }
@@ -104,6 +109,10 @@ public class JVar {
     } else {
       modifiers.remove(modifier);
     }
+  }
+
+  public void setVarArg(final boolean varArg) {
+    this.varArg = varArg;
   }
 
   @Override

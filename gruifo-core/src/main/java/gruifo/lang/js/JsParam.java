@@ -53,6 +53,6 @@ public class JsParam {
 
   @Override
   public String toString() {
-    return "JsParam [name=" + name + ", type=" + type + "]";
+    return "JsParam [name=" + name + ", type=" + getType() + "]";
   }
 }

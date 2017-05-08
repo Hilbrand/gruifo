@@ -23,23 +23,25 @@ import javax.lang.model.element.Modifier;
 /**
  * Data class to store the JavaScript method data.
  */
-public class JsMethod {
+public class JsMethod implements Cloneable {
 
   private final String packageName;
   private final EnumSet<Modifier> modifiers = EnumSet.noneOf(Modifier.class);
 
   private JsElement element;
   private String functionName;
-  private List<JsParam> params = null;
 
   public JsMethod(final String packageName, final String functionName) {
     this.packageName = packageName;
     this.functionName = functionName;
   }
 
-  public JsMethod(final JsMethod jsMethod) {
-    this(jsMethod.getPackageName(), jsMethod.getMethodName());
-    element = jsMethod.getElement();
+  @Override
+  public JsMethod clone() {
+    final JsMethod clone = new JsMethod(getPackageName(), getMethodName());
+    clone.element = element == null ? null : element.clone();
+    clone.modifiers.addAll(modifiers);
+    return clone;
   }
 
   public EnumSet<Modifier> getModifiers() {
@@ -51,7 +53,7 @@ public class JsMethod {
   }
 
   public List<JsParam> getParams() {
-    return params == null ? element.getParams() : params;
+    return element.getParams();
   }
 
   public JsElement getElement() {
@@ -84,7 +86,7 @@ public class JsMethod {
   }
 
   public void setParams(final List<JsParam> params) {
-    this.params = params;
+    element.setParams(params);
   }
 
   public void setStaticMethod(final boolean staticMethod) {

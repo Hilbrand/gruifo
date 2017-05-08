@@ -82,7 +82,8 @@ public class GruifoMojo extends AbstractMojo {
         new File(project.getBuild().getDirectory(), GEN_DIRECTORY);
     final Controller controller;
     try {
-      controller = new Controller(srcPaths, outputPath, typeMapperFile,
+      final File typeMapperFileFile = typeMapperFile == null ? null : new File(typeMapperFile);
+      controller = new Controller(srcPaths, outputPath, typeMapperFileFile,
               Charset.forName(charSet));
     } catch (JsonSyntaxException | IOException e) {
       throw new MojoExecutionException("Failed to start generation process", e);

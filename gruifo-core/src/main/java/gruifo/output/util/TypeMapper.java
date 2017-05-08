@@ -55,7 +55,7 @@ public class TypeMapper {
   }
 
   public TypeName map(final JsTypeObject jsTypeObject) {
-    return map(jsTypeObject, unboxedMapper);
+    return jsTypeObject.isFunction() ? null : map(jsTypeObject, unboxedMapper);
   }
 
   private TypeName map(final JsTypeObject jsTypeObject,

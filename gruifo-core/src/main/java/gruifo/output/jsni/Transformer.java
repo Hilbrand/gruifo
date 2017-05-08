@@ -25,6 +25,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.squareup.javapoet.ArrayTypeName;
 import com.squareup.javapoet.TypeName;
 
 import gruifo.lang.java.JClass;
@@ -210,7 +211,9 @@ class Transformer {
     //    if (replaceType != null) {
     //      param.setType(replaceType);
     //    }
-    return new JVar(param.getName(), TYPE_MAPPER.map(param.getType()));
+    final JVar jVar = new JVar(param.getName(), transformType((JsType) param.getType()).get(0)); //TYPE_MAPPER.map(param.getType()));
+    jVar.setVarArg(param.getType().isVarArgs());
+    return jVar;
   }
 
   private void setReturnType(final JsMethod jsMethod, final JMethod jMethod) {
@@ -243,12 +246,12 @@ class Transformer {
   }
 
   private TypeName tranformVarargs(final JsType jsType, final TypeName type) {
-    return type;//type + (jsType.isVarArgs() ? "..." : "");
+    return jsType.isVarArgs() ? ArrayTypeName.of(type) : type;
   }
 
   private TypeName transformSingleType(final JsType jsType) {
     final TypeName type;
-    final TypeName mapRawType = TYPE_MAPPER.map(jsType);
+    final TypeName mapRawType = transformType(jsType, false);
     if (mapRawType == null) {
       final TypeName transformedType = transformType(jsType, true);
       if (transformedType == null) {
