@@ -57,7 +57,7 @@ class JsFilesMapper {
     mapFiles(jsFile.getInnerJFiles());
     mapElement(jsFile.getElement());
     mapEnums(jsFile.getEnumValues());
-    mapParamList(jsFile.getFields());
+    //    mapParamList(jsFile.getFields());
     mapMethods(jsFile.getMethods());
   }
 
@@ -65,7 +65,7 @@ class JsFilesMapper {
     element.setExtends(mapJsObject(element.getExtends()));
     mapJsObjectList(element.getImplements());
     element.setType(mapJsObject(element.getType()));
-    mapParamList(element.getTypeDef());
+    //    mapParamList(element.getTypeDef());
   }
 
   private void mapEnums(final List<JsEnum> enumValues) {

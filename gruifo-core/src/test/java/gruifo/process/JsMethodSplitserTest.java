@@ -60,13 +60,25 @@ public class JsMethodSplitserTest {
   }
 
   @Test
-  public void testChoiceMethodParam() {
+  public void testMultiMethodParam() {
     final JsFile jsFile = createJsF();
     final List<JsParam> params = addMethodForParams(jsFile);
     final JsTypeParser parser = new JsTypeParser();
     addParam(params, parser.parseType("double|int"), "param1", false);
     splitser.splitMethodsInClass(jsFile);
     assertEquals("Should have 2 methods after splits", 2,
+        jsFile.getMethods().size());
+  }
+
+  @Test
+  public void testMultiGenericMethodParam() {
+    final JsFile jsFile = createJsF();
+    final List<JsParam> params = addMethodForParams(jsFile);
+    final JsTypeParser parser = new JsTypeParser();
+    addParam(params, parser.parseType("Array.<double|int>"), "param1", false);
+    addParam(params, parser.parseType("Array.<double|int>"), "param2", false);
+    splitser.splitMethodsInClass(jsFile);
+    assertEquals("Should have 4 methods after splits", 4,
         jsFile.getMethods().size());
   }
 
@@ -90,10 +102,8 @@ public class JsMethodSplitserTest {
 
   private void addParam(final List<JsParam> params, final JsTypeObject type,
       final String name, final boolean optional) {
-    final JsElement element1 = new JsElement();
     type.setOptional(optional);
-    element1.setType(type);
-    params.add(new JsParam(name, element1));
+    params.add(new JsParam(name, type));
   }
 
 }

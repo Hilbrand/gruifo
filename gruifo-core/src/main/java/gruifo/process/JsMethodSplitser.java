@@ -46,7 +46,8 @@ class JsMethodSplitser {
   public void splitMethodsInClass(final JsFile jsFile) {
     final List<JsMethod> allMethods = new ArrayList<>();
     for (final JsMethod jsMethod : jsFile.getMethods()) {
-      final List<List<JsParam>> list = splitMethodParamsOptional(jsMethod.getParams());
+      final List<List<JsParam>> list =
+          splitMethodParamsOptional(jsMethod.getParams());
       final List<List<JsParam>> jParamList = new ArrayList<>();
       for (final List<JsParam> innerList : list) {
         jParamList.addAll(split2MethodParamsMulti(innerList));
@@ -98,13 +99,14 @@ class JsMethodSplitser {
    * @param jsParams
    * @return
    */
-  private List<List<JsParam>> split2MethodParamsMulti(final List<JsParam> jsParams) {
+  private List<List<JsParam>> split2MethodParamsMulti(
+      final List<JsParam> jsParams) {
     final List<List<JsParam>> params = new ArrayList<>();
     params.add(new ArrayList<JsParam>());
     for (int i = 0; i < jsParams.size(); i++) {
       final JsParam jsParam = jsParams.get(i);
       if (isMultiTypeParam(jsParam.getType())) {
-        expandChoices(params, jsParam);
+        expandMultiParam(params, jsParam);
       } else {
         addSingleParam(params, jsParam);
       }
@@ -127,7 +129,7 @@ class JsMethodSplitser {
   }
 
   /**
-   * Add new lists for each choice. The lists are alternating replicated and
+   * Add new lists for each type. The lists are alternating replicated and
    * then sequential added:
    *
    * <pre>
@@ -138,14 +140,15 @@ class JsMethodSplitser {
    * </pre>
    *
    * @param params List of combinations of List of parameters.
-   * @param jsParam choice parameters to add.
+   * @param jsParam multi parameters to add.
    */
-  private void expandChoices(final List<List<JsParam>> params, final JsParam jsParam) {
-    final List<JsParam> splitParams = optionParam2List(jsParam);
+  private void expandMultiParam(final List<List<JsParam>> params,
+      final JsParam jsParam) {
+    final List<JsParam> splitParams = splitParam2List(jsParam);
     final int currentSize = params.size();
     // Add new lists matching the number of choices.
-    for (int j = 0; j < currentSize; j++) {
-      for (int k = 1; k < splitParams.size(); k++) {
+    for (int k = 1; k < splitParams.size(); k++) {
+      for (int j = 0; j < currentSize; j++) {
         params.add(new ArrayList<>(params.get(j)));
       }
     }
@@ -156,13 +159,11 @@ class JsMethodSplitser {
     }
   }
 
-  private List<JsParam> optionParam2List(final JsParam jsParam) {
+  private List<JsParam> splitParam2List(final JsParam jsParam) {
     final List<JsParam> splitParams = new ArrayList<>();
     for (final JsTypeObject innerJsParam : getTypes(jsParam.getType())) {
       if (!isDuplicate(splitParams, innerJsParam)) {
-        final JsParam newJsParam = new JsParam(jsParam.getName(), jsParam.getElement());
-        newJsParam.setType(innerJsParam);
-        splitParams.add(newJsParam);
+        splitParams.add(new JsParam(jsParam.getName(), innerJsParam));
       }
     }
     return splitParams;
@@ -174,15 +175,28 @@ class JsMethodSplitser {
       types.addAll(getJsType((JsType) jsParamType));
     } else if (jsParamType instanceof JsTypeList) {
       types.addAll(getJsTypeList(((JsTypeList) jsParamType).getTypes()));
+    } else if (jsParamType == null) {
+      throw new NullPointerException("jsParamType may not be null.");
+    } else {
+      throw new IllegalArgumentException("Instance of JsTypeObject '"
+          + jsParamType.getClass().getName() + "' not supported");
     }
     return types;
   }
 
   private List<JsTypeObject> getJsType(final JsType jsType) {
     final List<JsTypeObject> types = new ArrayList<>();
-    for (final JsTypeObject jsTypeObject : getJsTypeList(jsType.getTypeList())) {
-      final JsType type = new JsType(jsType.getName(), jsType.getRawType());
-      type.getTypeList().add(jsTypeObject);
+    if (jsType.getTypeList().isEmpty()) {
+      types.add(jsType);
+    } else {
+      for (final JsTypeObject jsTypeObject :
+        getJsTypeList(jsType.getTypeList())) {
+        final String name = jsType.getName();
+        final JsType type = new JsType(name,
+            name + ".<" + jsTypeObject.getRawType() + '>');
+        type.addGenericType(jsTypeObject);
+        types.add(type);
+      }
     }
     return types;
   }
@@ -195,7 +209,8 @@ class JsMethodSplitser {
     return types;
   }
 
-  private boolean isDuplicate(final List<JsParam> splitParams, final JsTypeObject typeObject) {
+  private boolean isDuplicate(final List<JsParam> splitParams,
+      final JsTypeObject typeObject) {
     boolean duplicate = false;
     for (final JsParam jParam : splitParams) {
       if (typeObject.equals(jParam.getType())) {
@@ -211,7 +226,8 @@ class JsMethodSplitser {
    * @param params List of combinations of List of parameters.
    * @param jsParam parameter to add.
    */
-  private void addSingleParam(final List<List<JsParam>> params, final JsParam jsParam) {
+  private void addSingleParam(final List<List<JsParam>> params,
+      final JsParam jsParam) {
     for (final List<JsParam> list : params) {
       list.add(jsParam);
     }

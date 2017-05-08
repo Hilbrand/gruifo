@@ -15,9 +15,6 @@
  */
 package gruifo.parser;
 
-import gruifo.lang.js.JsElement;
-import gruifo.lang.js.JsParam;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -25,6 +22,9 @@ import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import gruifo.lang.js.JsElement;
+import gruifo.lang.js.JsField;
 
 /**
  * Parses the type of a @typedef annotation.
@@ -58,7 +58,7 @@ class JsDocTypedefParser {
 
   private int parseTypeClass(final JsElement doc, final String[] lines, int i,
       final String fileName) {
-    final List<JsParam> fields = new ArrayList<>();
+    final List<JsField> fields = new ArrayList<>();
     final StringBuffer sb = new StringBuffer(stripAndReplace(lines[i]));
     for (; !lines[i].contains("}}"); i++) {
       sb.append(stripAndReplace(lines[i + 1]));
@@ -79,7 +79,7 @@ class JsDocTypedefParser {
     return tdp.find() ? tdp.group(1) : "";
   }
 
-  private void parseValues(final String values, final List<JsParam> fields) {
+  private void parseValues(final String values, final List<JsField> fields) {
     String var = "";
     boolean varFound = false;
     int offset = 0;
@@ -106,10 +106,9 @@ class JsDocTypedefParser {
     }
   }
 
-  private void addField(final List<JsParam> fields, final String var,
+  private void addField(final List<JsField> fields, final String var,
       final String type) {
-    final JsParam field = new JsParam();
-    field.setName(var);
+    final JsField field = new JsField(var, new JsElement());
     field.setType(jsTypeParser.parseType((type)));
     fields.add(field);
   }

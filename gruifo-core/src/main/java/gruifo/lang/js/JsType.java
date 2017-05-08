@@ -43,7 +43,7 @@ public class JsType extends JsTypeObject {
     this.name = name;
   }
 
-  public void addGenericType(final JsType type) {
+  public void addGenericType(final JsTypeObject type) {
     typeList.add(type);
   }
 

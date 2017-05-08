@@ -21,7 +21,7 @@ import java.util.List;
 public class JsFile {
 
   private final List<JsEnum> enumValues = new ArrayList<>();
-  private final List<JsParam> fields = new ArrayList<>();
+  private final List<JsField> fields = new ArrayList<>();
   private final List<JsMethod> methods = new ArrayList<>();
   private final List<JsFile> innerJsFiles = new ArrayList<>();
   private final String packageName;
@@ -46,7 +46,7 @@ public class JsFile {
     enumValues.add(new JsEnum(name, jsDoc));
   }
 
-  public void addField(final JsParam field) {
+  public void addField(final JsField field) {
     fields.add(field);
   }
 
@@ -70,7 +70,7 @@ public class JsFile {
     return enumValues;
   }
 
-  public List<JsParam> getFields() {
+  public List<JsField> getFields() {
     return fields;
   }
 

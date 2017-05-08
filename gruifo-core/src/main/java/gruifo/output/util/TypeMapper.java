@@ -62,8 +62,12 @@ public class TypeMapper {
       final Map<String, TypeName> primitiveMapper) {
     if (jsTypeObject instanceof JsType) {
       return map((JsType) jsTypeObject, unboxedMapper);
+    } else if (jsTypeObject == null) {
+      throw new NullPointerException("jsTypeObject may not be null");
+    } else {
+      throw new IllegalArgumentException("JsTypeObject of class '"
+          + jsTypeObject.getClass().getName() + "' not allowed.");
     }
-    throw new IllegalArgumentException("JsTypeObject not allowed.");
   }
 
   private TypeName map(final JsType jsTypeObject,

@@ -26,8 +26,8 @@ import java.util.Map;
 
 import com.google.gson.JsonSyntaxException;
 
+import gruifo.lang.js.JsField;
 import gruifo.lang.js.JsFile;
-import gruifo.lang.js.JsParam;
 
 /**
  *
@@ -49,8 +49,8 @@ public class Processor {
    */
 
   public Collection<JsFile> process(final Collection<JsFile> files) {
-    return mapper.mapFiles(splitter.splitFiles(
-        mapper.mapFiles(groupFiles(prepareFields(files)))));
+    return mapper.mapFiles(
+        splitter.splitFiles(groupFiles(prepareFields(files))));
   }
 
   /**
@@ -87,8 +87,8 @@ public class Processor {
   Collection<JsFile> prepareFields(final Collection<JsFile> files) {
     for (final JsFile jsFile : files) {
       if (jsFile.getElement().isTypeDef()) {
-        final List<JsParam> typeDefs = jsFile.getElement().getTypeDef();
-        for (final JsParam field : jsFile.getFields()) {
+        final List<JsField> typeDefs = jsFile.getElement().getTypeDef();
+        for (final JsField field : jsFile.getFields()) {
           for (int i = 0; i < typeDefs.size(); i++) {
             if (field.getName().equals(typeDefs.get(i).getName())) {
               typeDefs.remove(i);

@@ -31,7 +31,9 @@ import com.squareup.javapoet.TypeName;
 import gruifo.lang.java.JClass;
 import gruifo.lang.java.JMethod;
 import gruifo.lang.java.JVar;
+import gruifo.lang.js.JsElement;
 import gruifo.lang.js.JsEnum;
+import gruifo.lang.js.JsField;
 import gruifo.lang.js.JsFile;
 import gruifo.lang.js.JsMethod;
 import gruifo.lang.js.JsParam;
@@ -139,19 +141,20 @@ class Transformer {
   }
 
   private void transformFields(final JClass jFile,
-      final List<JsParam> jsFields) {
-    for (final JsParam jsParam : jsFields) {
+      final List<JsField> jsFields) {
+    for (final JsField jsField : jsFields) {
       //      if (!TYPE_MAPPER.ignore(jFile.getFullClassName(), jsParam.getName())) {
-      final List<TypeName> types = transformType((JsType) jsParam.getType());
+      final List<TypeName> types = transformType((JsType) jsField.getType());
       for (final TypeName type: types) {
-        final JVar field = jFile.addField(jsParam.getName(), type);
+        final JVar field = jFile.addField(jsField.getName(), type);
         //            filterParam(jFile,
         //            jFile.addField(jsParam.getName(), type));
         //          field.setMultiField(types.size() > 1);
-        if (jsParam.getElement() != null) {
-          field.setJavaDoc(jsParam.getElement().getJsDoc());
-          field.setStatic(jsParam.getElement().isConst());
-          field.setFinal(jsParam.getElement().isDefine());
+        final JsElement element = jsField.getElement();
+        if (element != null) {
+          field.setJavaDoc(element.getJsDoc());
+          field.setStatic(element.isConst());
+          field.setFinal(element.isDefine());
         }
       }
       //      }

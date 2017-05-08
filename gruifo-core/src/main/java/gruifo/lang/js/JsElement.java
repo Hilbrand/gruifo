@@ -43,7 +43,7 @@ public class JsElement implements Cloneable {
   private JsTypeObject extendsType;
   private final List<JsTypeObject> implementsTypes = new ArrayList<>();
   private List<JsParam> params = new ArrayList<>();
-  private List<JsParam> typeDef = new ArrayList<>();
+  private List<JsField> typeDef = new ArrayList<>();
   private JsTypeObject type;
   private JsTypeObject returnType;
   private boolean override;
@@ -115,7 +115,7 @@ public class JsElement implements Cloneable {
     return type;
   }
 
-  public List<JsParam> getTypeDef() {
+  public List<JsField> getTypeDef() {
     return typeDef;
   }
 
@@ -237,7 +237,7 @@ public class JsElement implements Cloneable {
     this.type = jsTypeObject;
   }
 
-  public void setTypeDef(final List<JsParam> typeDef) {
+  public void setTypeDef(final List<JsField> typeDef) {
     elementType = ElementType.TYPEDEF;
     this.typeDef = typeDef;
   }

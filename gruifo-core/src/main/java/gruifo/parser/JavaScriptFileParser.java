@@ -39,9 +39,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gruifo.lang.js.JsElement;
+import gruifo.lang.js.JsField;
 import gruifo.lang.js.JsFile;
 import gruifo.lang.js.JsMethod;
-import gruifo.lang.js.JsParam;
 import gruifo.output.util.PrintUtil;
 
 /**
@@ -234,7 +234,7 @@ class JavaScriptFileParser implements NodeVisitor {
     if (nameMatcher.find()) {
       final String packageName = nameMatcher.group(1);
       final String fieldName = nameMatcher.group(4);
-      final JsParam field = new JsParam(fieldName, element);
+      final JsField field = new JsField(fieldName, element);
       final JsFile jsFile = files.get(packageName);
       if (jsFile == null) {
         LOG.warn("Class for package name:{}, from name:{} not in file:{}"
@@ -348,7 +348,7 @@ class JavaScriptFileParser implements NodeVisitor {
     final boolean added;
     if (files.containsKey(fullClassName)) {
       final JsFile jsFile = files.get(fullClassName);
-      jsFile.addField(new JsParam(constName, element));
+      jsFile.addField(new JsField(constName, element));
       added = true;
     } else {
       final String fullConstName = getFullConstName(fullClassName);
@@ -358,7 +358,7 @@ class JavaScriptFileParser implements NodeVisitor {
         final JsFile cjsFile;
         if (files.containsKey(fullConstName)) {
           cjsFile = files.get(fullConstName);
-          cjsFile.addField(new JsParam(constName, element));
+          cjsFile.addField(new JsField(constName, element));
           added = true;
         } else {
           added = false;

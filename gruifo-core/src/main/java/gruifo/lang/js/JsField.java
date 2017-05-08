@@ -16,18 +16,19 @@
 package gruifo.lang.js;
 
 /**
- * Data class representing a JavaScript parameter.
+ * JavaScript object representing a Java field or constant.
  */
-public class JsParam {
+public class JsField {
   private String name;
-  private JsTypeObject type;
+  private final JsElement element;
 
-  public JsParam() {
+  public JsField(final String name, final JsElement element) {
+    this.name = name;
+    this.element = element;
   }
 
-  public JsParam(final String name, final JsTypeObject type) {
-    this.name = name;
-    this.type = type;
+  public JsElement getElement() {
+    return element;
   }
 
   public String getName() {
@@ -35,7 +36,7 @@ public class JsParam {
   }
 
   public JsTypeObject getType() {
-    return type;
+    return element.getType();
   }
 
   public void setName(final String name) {
@@ -43,11 +44,11 @@ public class JsParam {
   }
 
   public void setType(final JsTypeObject jsTypeObject) {
-    this.type = jsTypeObject;
+    element.setType(jsTypeObject);
   }
 
   @Override
   public String toString() {
-    return "JsParam [name=" + name + ", type=" + type + "]";
+    return "JsField [name=" + name + ", element=" + element + "]";
   }
 }
