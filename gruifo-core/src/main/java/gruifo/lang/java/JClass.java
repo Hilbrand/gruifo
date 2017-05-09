@@ -60,7 +60,7 @@ public class JClass {
 
   private final List<JMethod> constructors = new ArrayList<>();
   private final List<TypeVariableName> typeVariables = new ArrayList<>();
-  private final List<TypeName> superinterfaces = new ArrayList<>();
+  private final List<TypeName> _implements = new ArrayList<>();
   private TypeName superClass;
   private boolean dataClass;
   private boolean _interface;
@@ -88,7 +88,7 @@ public class JClass {
   }
 
   public void addSuperinterface(final TypeName implementsType) {
-    superinterfaces.add(implementsType);
+    _implements.add(implementsType);
   }
 
   public void addInnerJFile(final JClass JClass) {
@@ -150,7 +150,7 @@ public class JClass {
   }
 
   public Iterable<? extends TypeName> getSuperinterfaces() {
-    return superinterfaces;
+    return _implements;
   }
 
   public List<TypeVariableName> getTypeVariables() {
@@ -176,6 +176,14 @@ public class JClass {
 
   public boolean isStatic() {
     return modifiers.contains(Modifier.STATIC);
+  }
+
+  public void setAbstract(final boolean abstractClass) {
+    if (abstractClass) {
+      modifiers.add(Modifier.ABSTRACT);
+    } else {
+      modifiers.remove(Modifier.ABSTRACT);
+    }
   }
 
   public void setClassDescription(final String classDescription) {

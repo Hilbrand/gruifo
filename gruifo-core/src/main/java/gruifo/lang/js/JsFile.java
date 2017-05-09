@@ -93,4 +93,10 @@ public class JsFile {
   public void setElement(final JsElement element) {
     this.element = element;
   }
+
+  @Override
+  public String toString() {
+    return "JsFile [packageName=" + packageName + ", classOrInteraceName="
+        + classOrInteraceName + ", orginalFileName=" + orginalFileName + "]";
+  }
 }

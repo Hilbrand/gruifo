@@ -33,6 +33,10 @@ class JavaScriptDocParser {
       LoggerFactory.getLogger(JavaScriptDocParser.class);
 
   /**
+   * Annotation: @abstract
+   */
+  private static final String ABSTRACT = "abstract";
+  /**
    * Annotation: @api
    */
   private static final String API = "api";
@@ -120,6 +124,8 @@ class JavaScriptDocParser {
    * Annotation: @return {[type}] [description]
    */
   private static final String RETURN = "return";
+  // Fix for typo in JavaScript code were it should read return
+  private static final String RETURNS = "returns";
   /**
    * Annotation: @see
    */
@@ -158,7 +164,7 @@ class JavaScriptDocParser {
   private static final Pattern COMMENT_PATTERN =
       Pattern.compile("^ *\\* *([^@]+)");
   private static final Pattern STRIP_COMMENT_PATTERN =
-      Pattern.compile("^ *\\\\?\\*+/?([^/]+)");
+      Pattern.compile("^ *\\\\?\\*+(.+)/?");
 
   private final JsTypeParser jsTypeParser = new JsTypeParser();
   private final JsDocTypedefParser typedefParser =
@@ -176,6 +182,9 @@ class JavaScriptDocParser {
       final String line = lines[i];
       final String annotation = findAnnotation(line);
       switch(annotation) {
+      case ABSTRACT:
+        doc.setAbstract();
+        break;
       case CLASSDESC:
         doc.setClassDesc();
         break;
@@ -218,6 +227,7 @@ class JavaScriptDocParser {
         doc.setProtected();
         break;
       case RETURN:
+      case RETURNS:
         doc.setReturn(parseType(line, fileName));
         break;
       case TYPE:

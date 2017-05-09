@@ -28,6 +28,14 @@ nl.test.SomeClass.SOME_ID = 1;
 nl.test.SomeClass.prototype.getSomething;
 
 /**
+ * @return {number|string|undefined} Id.
+ * @api
+ */
+nl.test.SomeClass.prototype.getId = function() {
+  return this.id_;
+};
+
+/**
  * Method with 3 parameters, where the last is optional.
  * @param {number} first first parameter.
  * @param {number} second second parameter.
@@ -39,7 +47,7 @@ nl.test.SomeClass.prototype.setSomeFunction3 = function(first, second, third) {
 
 /**
  * Method with 4 variable parameters.
- * @param {number|string} first first parameter.
+ * @param {number | string | undefined} first first parameter.
  * @param {Array.<java.util.Properties|number>|java.util.Properties} second second parameter.
  * @param {int} third third parameter.
  * @param {!Array.<Array.<Array.<number>>>} fourth fourth parameter.

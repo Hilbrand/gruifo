@@ -57,7 +57,6 @@ class JsFilesMapper {
     mapFiles(jsFile.getInnerJFiles());
     mapElement(jsFile.getElement());
     mapEnums(jsFile.getEnumValues());
-    //    mapParamList(jsFile.getFields());
     mapMethods(jsFile.getMethods());
   }
 
@@ -65,7 +64,7 @@ class JsFilesMapper {
     element.setExtends(mapJsObject(element.getExtends()));
     mapJsObjectList(element.getImplements());
     element.setType(mapJsObject(element.getType()));
-    //    mapParamList(element.getTypeDef());
+    element.setReturn(mapJsObject(element.getReturn()));
   }
 
   private void mapEnums(final List<JsEnum> enumValues) {
@@ -108,15 +107,15 @@ class JsFilesMapper {
   }
 
   private JsTypeObject mapJsType(final JsType jsType) {
-    final String replacedName = mapper.replace(jsType.getName());
-    if (replacedName == null) {
-      final String replacedRawType = mapper.replace(jsType.getRawType());
-      if (replacedRawType != null) {
-        jsType.setName(replacedRawType);
-        jsType.getTypeList().clear();
+    final String replacedRawType = mapper.replace(jsType.getRawType());
+    if (replacedRawType == null) {
+      final String replacedName = mapper.replace(jsType.getName());
+      if (replacedName != null) {
+        jsType.setName(replacedName);
       }
     } else {
-      jsType.setName(replacedName);
+      jsType.setName(replacedRawType);
+      jsType.getTypeList().clear();
     }
     mapJsTypeList(jsType.getTypeList());
     return jsType;

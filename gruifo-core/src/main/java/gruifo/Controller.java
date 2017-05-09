@@ -130,14 +130,13 @@ public class Controller {
         final String packagePath = jsFile.getPackageName().replace('.', '/');
         final File path = new File(outputPath, packagePath);
         path.mkdirs();
-        try {
-          try (final FileWriter writer = new FileWriter(new File(path,
-              jsFile.getClassOrInterfaceName() + JAVA_EXT))) {
-            writer.append(printer.printFile(jsFile));
-            writer.flush();
-          }
-        } catch (final IOException e) {
-          LOG.error("Exception parsing file:" + jsFile.getOriginalFileName(), e);
+        try (final FileWriter writer = new FileWriter(new File(path,
+            jsFile.getClassOrInterfaceName() + JAVA_EXT))) {
+          writer.append(printer.printFile(jsFile));
+          writer.flush();
+        } catch (final IOException | RuntimeException e) {
+          LOG.error("Exception parsing file:{}",
+              jsFile.getOriginalFileName(), e);
         }
       }
     }

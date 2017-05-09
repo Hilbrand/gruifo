@@ -30,4 +30,5 @@
  *   @param {nl.Object|Object.<string, *>=} opt_geometryOrProperties
  *   @param {Object.<string, string|number>} params parameters.
  *   @param {Object.<undefined|string, string|number|undefined>} params parameters.
+ *   @param {!(string|number)} wrapped not parameter
  */

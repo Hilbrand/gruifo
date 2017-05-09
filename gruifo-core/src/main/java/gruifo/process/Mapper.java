@@ -20,19 +20,25 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 class Mapper {
+  private static final Logger LOG = LoggerFactory.getLogger(Mapper.class);
 
   private final Gson gson = new Gson();
   private final Mappings mapper;
 
   public Mapper(final File mapperFile, final Charset charSet)
       throws JsonSyntaxException, IOException {
+    LOG.info("Read mappings from file '{}'", mapperFile);
     mapper = gson.fromJson(
         FileUtils.readFileToString(mapperFile, charSet), Mappings.class);
+    LOG.info("Found {} replace items in mapper file",
+        mapper.getReplace().size());
   }
 
   public String replace(final String string1, final String string2,
@@ -45,7 +51,11 @@ class Mapper {
   }
 
   public String replace(final String string) {
-    return mapper.getReplace().get(string);
+    final String replaced = mapper.getReplace().get(string);
+    if (replaced != null && LOG.isTraceEnabled()) {
+      LOG.trace("Replaced '{}' with '{}'", string, replaced);
+    }
+    return replaced;
   }
 
   public boolean skip(final String fullClassName, final String methodName) {

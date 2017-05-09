@@ -38,7 +38,7 @@ public class JsDocParserParamTest extends JsDocParserTestBase {
 
   @Test
   public void testNumberOfParams() {
-    assertEquals("params size", 21, jsElement.getParams().size());
+    assertEquals("params size", 22, jsElement.getParams().size());
   }
 
   @Test
@@ -46,7 +46,7 @@ public class JsDocParserParamTest extends JsDocParserTestBase {
     assertEquals("param name", "options", getParamAtRow(0).getName());
     assertEquals("param is object", "nl.Options", getParamNameAtRow(0));
     assertEquals("param is *", "*", getParamNameAtRow(1));
-    assertEquals("param is ?", "", getParamNameAtRow(2));
+    assertEquals("param is ?", "?", getParamNameAtRow(2));
   }
 
   @Test
@@ -148,6 +148,14 @@ public class JsDocParserParamTest extends JsDocParserTestBase {
         ((JsType) paramType.get(1)).getName());
     assertEquals("2nd choice rawtype", "Object.<string, *>",
         paramType.get(1).getRawType());
+  }
+
+  @Test
+  public void testParamWrapped() {
+    final JsTypeList paramType = (JsTypeList) getParamAtRow(21).getType();
+    assertEquals("2 types", 2, paramType.getTypes().size());
+    assertEquals("1st choice", "string",
+        ((JsType) paramType.get(0)).getName());
   }
 
   private String getParamNameAtRow(final int idx) {

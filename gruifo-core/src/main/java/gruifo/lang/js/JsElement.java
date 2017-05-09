@@ -37,6 +37,7 @@ public class JsElement implements Cloneable {
   }
 
   private Modifier modifier = Modifier.PUBLIC;
+  private boolean _abstract;
   private ElementType elementType = ElementType.METHOD;
   private boolean classDesc;
   private String jsDoc;
@@ -123,6 +124,10 @@ public class JsElement implements Cloneable {
     return returnType;
   }
 
+  public boolean isAbstract() {
+    return _abstract;
+  }
+
   public boolean isClass() {
     return elementType == ElementType.CONSTRUCTOR;
   }
@@ -169,6 +174,10 @@ public class JsElement implements Cloneable {
 
   public boolean isTypeDef() {
     return typeDef != null;
+  }
+
+  public void setAbstract() {
+    _abstract = true;
   }
 
   public void setClassDesc() {

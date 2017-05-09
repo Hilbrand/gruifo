@@ -19,12 +19,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import gruifo.lang.js.JsElement;
 import gruifo.lang.js.JsFile;
 import gruifo.lang.js.JsMethod;
 import gruifo.lang.js.JsParam;
 import gruifo.lang.js.JsType;
 import gruifo.lang.js.JsTypeList;
 import gruifo.lang.js.JsTypeObject;
+import gruifo.output.util.PrintUtil;
 
 /**
  * Class to splits methods with choice or optional parameters into separate
@@ -32,9 +37,16 @@ import gruifo.lang.js.JsTypeObject;
  */
 class JsMethodSplitser {
 
+  private static final Logger LOG =
+      LoggerFactory.getLogger(JsMethodSplitser.class);
+
   public Collection<JsFile> splitFiles(final Collection<JsFile> files) {
     for (final JsFile jsFile : files) {
-      splitMethodsInClass(jsFile);
+      try {
+        splitMethodsInClass(jsFile);
+      } catch (final Exception e) {
+        LOG.error("Error splitting file:{}", jsFile, e);
+      }
     }
     return files;
   }
@@ -59,7 +71,7 @@ class JsMethodSplitser {
       }
     }
     jsFile.getMethods().clear();
-    jsFile.getMethods().addAll(allMethods);
+    jsFile.getMethods().addAll(splitMultipleReturns(allMethods));
   }
 
   /**
@@ -189,16 +201,20 @@ class JsMethodSplitser {
     if (jsType.getTypeList().isEmpty()) {
       types.add(jsType);
     } else {
-      for (final JsTypeObject jsTypeObject :
-        getJsTypeList(jsType.getTypeList())) {
-        final String name = jsType.getName();
-        final JsType type = new JsType(name,
-            name + ".<" + jsTypeObject.getRawType() + '>');
-        type.addGenericType(jsTypeObject);
-        types.add(type);
-      }
+      splitJsTypesList(jsType, types);
     }
     return types;
+  }
+
+  private void splitJsTypesList(final JsType jsType,
+      final List<JsTypeObject> types) {
+    for (final JsTypeObject jso : getJsTypeList(jsType.getTypeList())) {
+      final String name = jsType.getName();
+      final JsType type = new JsType(name,
+          name + ".<" + jso.getRawType() + '>');
+      type.addGenericType(jso);
+      types.add(type);
+    }
   }
 
   private List<JsTypeObject> getJsTypeList(final List<JsTypeObject> list) {
@@ -231,5 +247,37 @@ class JsMethodSplitser {
     for (final List<JsParam> list : params) {
       list.add(jsParam);
     }
+  }
+
+  private List<JsMethod> splitMultipleReturns(final List<JsMethod> methods) {
+    final List<JsMethod> allMethods = new ArrayList<>();
+    for (final JsMethod jsMethod : methods) {
+      final JsElement element = jsMethod.getElement();
+      final JsTypeObject returnValue = element.getReturn();
+      if (returnValue instanceof JsTypeList) {
+        allMethods.addAll(splitMultiReturn(jsMethod, returnValue));
+      } else {
+        allMethods.add(jsMethod);
+      }
+    }
+    return allMethods;
+  }
+
+  private List<JsMethod> splitMultiReturn(final JsMethod jsMethod,
+      final JsTypeObject returnValue) {
+    final List<JsMethod> methods = new ArrayList<>();
+    for (final JsTypeObject type : ((JsTypeList) returnValue).getTypes()) {
+      final JsMethod method = jsMethod.clone();
+      method.getElement().setReturn(type);
+      try {
+        method.setMethodName(method.getMethodName()
+            + PrintUtil.firstCharUpper(((JsType)type).getName()));
+      } catch (final StringIndexOutOfBoundsException e) {
+        LOG.error("What? {}", returnValue, e);
+        throw e;
+      }
+      methods.add(method);
+    }
+    return methods;
   }
 }

@@ -53,6 +53,9 @@ public class JsTypeParser {
   }
 
   private boolean isOptional(final String stripped) {
+    if (stripped.isEmpty()) {
+      return false;
+    }
     return '=' == stripped.charAt(stripped.length() - 1);
   }
 
@@ -72,52 +75,46 @@ public class JsTypeParser {
 
   private List<JsTypeObject> typeParser(final String rawType,
       final char[] chars, final AtomicInteger idx) {
-    final ParseState parseState = new ParseState();
-    int startPos = idx.get();
-    int startPosChoices = startPos;
-    int nameEndPos = startPos;
-    int parentheses = 0;
-    int endPos;
+    final ParseState parseState = new ParseState(idx.get());
     final List<JsTypeObject> types = new ArrayList<>();
     final List<JsTypeObject> choices = new ArrayList<>();
     List<JsTypeObject> subTypes = null;
     for (; idx.get() < chars.length; idx.incrementAndGet()) {
       final int i = idx.get();
-      endPos = i;
+      parseState.endPos = i;
       switch (chars[i]) {
       case 'f':
         if (rawType.substring(i).startsWith(FUNCTION)) {
           parseState.inFunction = true;
-          parentheses++;
+          parseState.parentheses++;
         }
         break;
       case '(':
-        parentheses++;
+        parseState.parentheses++;
+        if (!parseState.inFunction) {
+          parseState.startPos++;
+        }
         break;
       case ')':
-        parentheses--;
-        parseState.endFunction = parentheses == 0;
+        parseState.parentheses--;
+        parseState.endFunction = parseState.parentheses == 0;
         break;
       case ' ':
-        if (startPos == endPos) {
-          startPos++;
+        if (parseState.startPos == parseState.endPos) {
+          parseState.startPos++;
         } else {
           parseState.newType = true;
-          endPos--;
+          parseState.endPos--;
         }
         break;
       case '.': // generic or varargs .... varargs before
         if (chars[i+1] == '<') {
-          endPos--;
-          nameEndPos = endPos;
-          idx.incrementAndGet(); // skip past '<'
-          idx.incrementAndGet();
-          subTypes = typeParser(rawType, chars, idx);
-          endPos = idx.get();
+          idx.incrementAndGet(); // skip past .
+          subTypes = parseStartGeneric(rawType, chars, idx, parseState);
         } else if (chars[i+1] == '.' && chars[i+2] == '.') {
           parseState.varArgs = true;
           idx.addAndGet(2); // skip ...
-          startPos = i + 3;
+          parseState.startPos = i + 3;
         }
         break;
       case ',':
@@ -127,45 +124,53 @@ public class JsTypeParser {
         parseState.inFunction && !parseState.endFunction;
         parseState.param = true;
         parseState.newType = true;
-        endPos--;
+        parseState.endPos--;
         break;
       case '<':
+        subTypes = parseStartGeneric(rawType, chars, idx, parseState);
         // should not happen...
-        throw new IllegalArgumentException("Unexpected '<' in " + rawType);
+        //        throw new IllegalArgumentException("Unexpected '<' in " + rawType);
       case '>':
         parseState.decreaseDepth = true;
         parseState.newType = true;
-        endPos--;
+        parseState.endPos--;
         break;
       case '|': // new choice argument
         parseState.newType = true;
-        endPos--;
+        parseState.endPos--;
         break;
       case '!': // argument can't be null. !  is positioned before type
         parseState.notNull = true;
-        startPos++;
+        parseState.startPos++;
         break;
       case '?': // argument can be null. ? is positioned before type
-        if (startPos == endPos) {
+        if (parseState.startPos == parseState.endPos) {
           parseState.canNull = true;
-          startPos++;
         }
         break;
       case '=': // optional argument. = is positioned after type
         parseState.optional = true;
-        endPos--;
-        throw new IllegalArgumentException("Unexpected '=' in " + rawType);
+        parseState.endPos--;
+        break;
+        //        throw new IllegalArgumentException("Unexpected '=' in " + rawType);
       default:
         break;
       }
       if (subTypes == null) {
-        nameEndPos = endPos;
+        parseState.nameEndPos = parseState.endPos;
       }
       boolean lastToken = idx.get() == chars.length - 1;
       if (!parseState.inFunction && parseState.newType || lastToken) {
-        final String sType = rawType.substring(startPos, endPos + 1);
-        final String name = rawType.substring(startPos, nameEndPos + 1);
+        final int offset =
+            rawType.charAt(0) == '?' && rawType.length() > 1 ? 1 : 0;
+        final String sType = rawType.substring(
+            parseState.startPos + offset, parseState.endPos + 1);
+        final String name = rawType.substring(
+            parseState.startPos + offset, parseState.nameEndPos + 1);
         boolean withNull = false;
+        //        if (sType.isEmpty() && !parseState.canNull) {
+        //          // ignore: space after type, but before new -> number |
+        //        } else
         if ("undefined".equals(sType) || "null".equals(sType)) {
           withNull = true;
         } else {
@@ -184,8 +189,8 @@ public class JsTypeParser {
             choices.get(0).setNull(withNull);
             types.add(choices.get(0));
           } else {
-            final JsTypeList typeList =
-                new JsTypeList(rawType.substring(startPosChoices, endPos + 1));
+            final JsTypeList typeList = new JsTypeList(rawType.substring(
+                parseState.startPosChoices, parseState.endPos + 1));
             typeList.setNull(withNull);
             typeList.addAll(choices);
             types.add(typeList);
@@ -195,10 +200,10 @@ public class JsTypeParser {
             return types;
           }
           if (parseState.param) {
-            startPosChoices = i + 1;
+            parseState.startPosChoices = i + 1;
           }
         }
-        startPos = idx.get() + 1;
+        parseState.startPos = idx.get() + 1;
         parseState.resetAll();
         subTypes = null;
       }
@@ -206,9 +211,27 @@ public class JsTypeParser {
     return types;
   }
 
+  private List<JsTypeObject> parseStartGeneric(final String rawType,
+      final char[] chars, final AtomicInteger idx, final ParseState ps) {
+    List<JsTypeObject> subTypes;
+    ps.endPos--;
+    ps.nameEndPos = ps.endPos;
+    idx.incrementAndGet(); // skip past '<'
+    subTypes = typeParser(rawType, chars, idx);
+    ps.endPos = idx.get();
+    return subTypes;
+  }
+
   private static class ParseState {
     boolean notNull, canNull, optional, varArgs, newType, decreaseDepth,
-        inFunction, endFunction, param;
+    inFunction, endFunction, param;
+    int startPos, startPosChoices, nameEndPos, parentheses, endPos;
+
+    public ParseState(final int startPos) {
+      this.startPos = startPos;
+      startPosChoices = startPos;
+      nameEndPos = startPos;
+    }
 
     void resetAll() {
       newType = param = varArgs = notNull = canNull = optional = inFunction

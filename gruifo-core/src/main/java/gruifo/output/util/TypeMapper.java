@@ -19,6 +19,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
@@ -31,6 +34,8 @@ import gruifo.lang.js.JsTypeObject;
  * FIXME: probably only primitive types mapper?
  */
 public class TypeMapper {
+
+  private static final Logger LOG = LoggerFactory.getLogger(TypeMapper.class);
 
   private final Map<String, TypeName> unboxedMapper = new HashMap<>();
   private final Map<String, TypeName> boxedMapper = new HashMap<>();
@@ -61,7 +66,7 @@ public class TypeMapper {
   private TypeName map(final JsTypeObject jsTypeObject,
       final Map<String, TypeName> primitiveMapper) {
     if (jsTypeObject instanceof JsType) {
-      return map((JsType) jsTypeObject, unboxedMapper);
+      return map((JsType) jsTypeObject, primitiveMapper);
     } else if (jsTypeObject == null) {
       throw new NullPointerException("jsTypeObject may not be null");
     } else {
@@ -105,7 +110,7 @@ public class TypeMapper {
   private ClassName getClassName(final String name) {
     final int clzidx = name.lastIndexOf('.');
     if (clzidx < 0) {
-      return null;
+      return ClassName.get("", name);
     } else {
       return ClassName.get(name.substring(0, clzidx),
           name.substring(clzidx + 1, name.length()));

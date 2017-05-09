@@ -38,6 +38,7 @@ import gruifo.lang.js.JsFile;
 import gruifo.lang.js.JsMethod;
 import gruifo.lang.js.JsParam;
 import gruifo.lang.js.JsType;
+import gruifo.lang.js.JsTypeList;
 import gruifo.lang.js.JsTypeObject;
 import gruifo.output.util.TypeMapper;
 
@@ -61,6 +62,7 @@ class Transformer {
     jFile.setInterface(jsFile.isInterface());
     addHeader(jFile, jsFile.getOriginalFileName());
     jFile.setClassDescription(jsFile.getElement().getJsDoc());
+    jFile.setAbstract(jsFile.getElement().isAbstract());
     for (final JsFile subFile: jsFile.getInnerJFiles()) {
       jFile.addInnerJFile(transform(subFile));
     }
@@ -179,7 +181,13 @@ class Transformer {
     jMethod.setStatic(jsMethod.isStaticMethod());
     setReturnType(jsMethod, jMethod);
     for (final JsParam param : jsMethod.getParams()) {
-      jMethod.addParam(filterParam(jFile, jMethod, param));
+      try {
+        jMethod.addParam(filterParam(jFile, jMethod, param));
+      } catch (final IllegalArgumentException e) {
+        LOG.error("Problem with param:{} in method:{} in file:{}",
+            param, jMethod.getName(), jFile.getFullClassName());
+        throw e;
+      }
     }
     return jMethod;
   }
@@ -222,8 +230,14 @@ class Transformer {
   private void setReturnType(final JsMethod jsMethod, final JMethod jMethod) {
     jMethod.setGenericType(jsMethod.getElement().getGenericType());
     final boolean voidReturn = jsMethod.getElement().getReturn() == null;
-    jMethod.setType(voidReturn ? TypeName.VOID
-        : transformSingleType((JsType) jsMethod.getElement().getReturn()));
+    if (jsMethod.getElement().getReturn() instanceof JsTypeList) {
+      throw new IllegalArgumentException(
+          "Strange return type for method " + jsMethod.getMethodName()
+          + ',' + jsMethod.getElement().getReturn());
+    } else {
+      jMethod.setType(voidReturn ? TypeName.VOID
+          : transformSingleType((JsType) jsMethod.getElement().getReturn()));
+    }
   }
 
   private List<TypeName> transformType(final JsType jsType) {
@@ -249,6 +263,10 @@ class Transformer {
   }
 
   private TypeName tranformVarargs(final JsType jsType, final TypeName type) {
+    if (jsType == null) {
+      LOG.error("Called tranformVarargs with null argument");
+      return null;
+    }
     return jsType.isVarArgs() ? ArrayTypeName.of(type) : type;
   }
 
@@ -282,6 +300,10 @@ class Transformer {
 
   private TypeName transformType(final JsType jsType, final boolean generic) {
     TypeName type;
+    if (jsType == null) {
+      LOG.error("Called transformType with null argument");
+      return null;
+    }
     if (jsType.isFunction()) {
       type = TypeMapper2.GWT_JAVA_SCRIPT_OBJECT;
     } else if (jsType.isGeneric()) {

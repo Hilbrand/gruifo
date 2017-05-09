@@ -16,6 +16,7 @@
 package gruifo.process;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,6 +81,23 @@ public class JsMethodSplitserTest {
     splitser.splitMethodsInClass(jsFile);
     assertEquals("Should have 4 methods after splits", 4,
         jsFile.getMethods().size());
+  }
+
+  @Test
+  public void testMultiReturns() {
+    final JsFile jsFile = createJsF();
+    final JsMethod method = new JsMethod("nl.test", "method");
+    jsFile.addMethod(method);
+    final JsElement element = new JsElement();
+    method.setElement(element);
+    final JsTypeParser parser = new JsTypeParser();
+    element.setReturn(parser.parseType("number|string|undefined"));
+    splitser.splitMethodsInClass(jsFile);
+    assertEquals("Should have 2 methods after multi returns split", 2,
+        jsFile.getMethods().size());
+    assertSame("Type of return should be JsType",
+        JsType.class,
+        jsFile.getMethods().get(0).getElement().getReturn().getClass());
   }
 
   private JsFile createJsF() {

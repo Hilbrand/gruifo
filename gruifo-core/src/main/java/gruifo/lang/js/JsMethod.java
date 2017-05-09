@@ -65,7 +65,7 @@ public class JsMethod implements Cloneable {
   }
 
   public boolean isAbstractMethod() {
-    return modifiers.contains(Modifier.ABSTRACT);
+    return modifiers.contains(Modifier.ABSTRACT) || element.isAbstract();
   }
 
   public boolean isStaticMethod() {

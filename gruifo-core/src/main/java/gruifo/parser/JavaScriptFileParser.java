@@ -100,9 +100,10 @@ class JavaScriptFileParser implements NodeVisitor {
           visitMethodOrClass(((PropertyGet) node.getLeft()).toSource(),
               node.getJsDoc());
           if (node.getRight() instanceof PropertyGet) {
-            LOG.info("left:{}, right:{}",
+            LOG.info("left:{}, right:{} in file:{}",
                 ((PropertyGet) node.getLeft()).toSource(),
-                ((PropertyGet) node.getRight()).toSource());
+                ((PropertyGet) node.getRight()).toSource(),
+                fileName);
           }
         } catch (final ClassCastException e) {
           LOG.error("Node different then expected in file:{},", fileName, e);
@@ -132,7 +133,7 @@ class JavaScriptFileParser implements NodeVisitor {
       final AstNode astNode) {
     if (jsDoc == null) {
       //TODO sometimes values are recognized as enums even if they are not.
-      LOG.error("Comment in node {} for file {} is empty.", name, fileName);
+      LOG.error("Comment in node {} is empty in file:{}.", name, fileName);
       return;
     }
     final JsElement element = parser.parse(fileName, jsDoc);
