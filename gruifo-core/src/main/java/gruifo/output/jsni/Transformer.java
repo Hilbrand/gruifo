@@ -145,13 +145,14 @@ class Transformer {
   private void transformFields(final JClass jFile,
       final List<JsField> jsFields) {
     for (final JsField jsField : jsFields) {
-      //      if (!TYPE_MAPPER.ignore(jFile.getFullClassName(), jsParam.getName())) {
+      if (jsField.getType() instanceof JsTypeList) {
+        LOG.error("Invalid type:{} in class:{}", jsField.getType(),
+            jFile.getFullClassName());
+        continue;
+      }
       final List<TypeName> types = transformType((JsType) jsField.getType());
       for (final TypeName type: types) {
         final JVar field = jFile.addField(jsField.getName(), type);
-        //            filterParam(jFile,
-        //            jFile.addField(jsParam.getName(), type));
-        //          field.setMultiField(types.size() > 1);
         final JsElement element = jsField.getElement();
         if (element != null) {
           field.setJavaDoc(element.getJsDoc());

@@ -24,6 +24,7 @@ import java.util.List;
 import org.junit.Test;
 
 import gruifo.lang.js.JsElement;
+import gruifo.lang.js.JsField;
 import gruifo.lang.js.JsFile;
 import gruifo.lang.js.JsMethod;
 import gruifo.lang.js.JsParam;
@@ -37,6 +38,18 @@ import gruifo.parser.JsTypeParser;
 public class JsMethodSplitserTest {
 
   private final JsMethodSplitser splitser = new JsMethodSplitser();
+
+  @Test
+  public void testSplitField() {
+    final JsFile jsFile = createJsF();
+    final JsTypeParser parser = new JsTypeParser();
+    final JsField field = new JsField("field1", new JsElement());
+    field.setType(parser.parseType("double|int"));
+    jsFile.addField(field);
+    splitser.splitFieldsInClass(jsFile.getFields(), jsFile);
+    assertEquals("Should have 2 fields after splits", 2,
+        jsFile.getFields().size());
+  }
 
   /**
    * Tests if methods with optional parameters are correctly split into

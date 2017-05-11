@@ -18,13 +18,18 @@ package gruifo.lang.js;
 /**
  * JavaScript object representing a Java field or constant.
  */
-public class JsField {
+public class JsField implements Cloneable {
   private String name;
   private final JsElement element;
 
   public JsField(final String name, final JsElement element) {
     this.name = name;
     this.element = element;
+  }
+
+  @Override
+  public JsField clone() {
+    return new JsField(name, element.clone());
   }
 
   public JsElement getElement() {

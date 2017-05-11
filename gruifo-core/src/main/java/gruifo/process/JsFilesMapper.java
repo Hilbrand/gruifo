@@ -26,6 +26,7 @@ import com.google.gson.JsonSyntaxException;
 
 import gruifo.lang.js.JsElement;
 import gruifo.lang.js.JsEnum;
+import gruifo.lang.js.JsField;
 import gruifo.lang.js.JsFile;
 import gruifo.lang.js.JsMethod;
 import gruifo.lang.js.JsParam;
@@ -57,12 +58,14 @@ class JsFilesMapper {
     mapFiles(jsFile.getInnerJFiles());
     mapElement(jsFile.getElement());
     mapEnums(jsFile.getEnumValues());
+    mapFields(jsFile.getFields());
     mapMethods(jsFile.getMethods());
   }
 
   private void mapElement(final JsElement element) {
     element.setExtends(mapJsObject(element.getExtends()));
     mapJsObjectList(element.getImplements());
+    mapFields(element.getTypeDef());
     element.setType(mapJsObject(element.getType()));
     element.setReturn(mapJsObject(element.getReturn()));
   }
@@ -89,6 +92,14 @@ class JsFilesMapper {
   private void mapParam(final JsParam jsParam) {
     //  jFile.getFullClassName(), jMethod.getMethodName(), param.getName()
     jsParam.setType(mapJsObject(jsParam.getType()));
+  }
+
+  private void mapFields(final List<JsField> typeDef) {
+    if (typeDef != null) {
+      for (final JsField jsField : typeDef) {
+        jsField.setType(mapJsObject(jsField.getType()));
+      }
+    }
   }
 
   private void mapJsObjectList(final List<JsTypeObject> list) {
@@ -133,11 +144,6 @@ class JsFilesMapper {
     }
     list.clear();
     list.addAll(types);
-  }
-
-  private String string2TypeName(final String value) {
-    final int idx = value.lastIndexOf('.');
-    return idx < 0 ? value : value.substring(idx + 1);
   }
 }
 

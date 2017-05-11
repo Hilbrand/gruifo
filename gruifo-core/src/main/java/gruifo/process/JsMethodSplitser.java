@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gruifo.lang.js.JsElement;
+import gruifo.lang.js.JsField;
 import gruifo.lang.js.JsFile;
 import gruifo.lang.js.JsMethod;
 import gruifo.lang.js.JsParam;
@@ -43,12 +44,37 @@ class JsMethodSplitser {
   public Collection<JsFile> splitFiles(final Collection<JsFile> files) {
     for (final JsFile jsFile : files) {
       try {
+        splitFieldsInClass(jsFile.getFields(), jsFile);
+        splitFieldsInClass(jsFile.getElement().getTypeDef(), jsFile);
         splitMethodsInClass(jsFile);
       } catch (final Exception e) {
         LOG.error("Error splitting file:{}", jsFile, e);
       }
     }
     return files;
+  }
+
+  public void splitFieldsInClass(final List<JsField> orgFields, final JsFile jsFile) {
+    final List<JsField> fields = new ArrayList<>();
+    for (final JsField field : orgFields) {
+      if (isTypeList(field.getType())) {
+        for (final JsTypeObject type : getTypes(field.getType())) {
+          if (type.isFunction()) {
+            LOG.error("Skipping function type:{} in file:{}",
+                type, jsFile.getOriginalFileName());
+            continue;
+          }
+          final JsField newField = field.clone();
+          newField.setName(field.getName() + deriveTypeName(type));
+          newField.setType(type);
+          fields.add(newField);
+        }
+      } else {
+        fields.add(field);
+      }
+    }
+    orgFields.clear();
+    orgFields.addAll(fields);
   }
 
   /**
@@ -117,7 +143,7 @@ class JsMethodSplitser {
     params.add(new ArrayList<JsParam>());
     for (int i = 0; i < jsParams.size(); i++) {
       final JsParam jsParam = jsParams.get(i);
-      if (isMultiTypeParam(jsParam.getType())) {
+      if (isTypeList(jsParam.getType())) {
         expandMultiParam(params, jsParam);
       } else {
         addSingleParam(params, jsParam);
@@ -126,13 +152,13 @@ class JsMethodSplitser {
     return params;
   }
 
-  private boolean isMultiTypeParam(final JsTypeObject jsTypeObject) {
+  private boolean isTypeList(final JsTypeObject jsTypeObject) {
     if (jsTypeObject instanceof JsTypeList) {
       return true;
     }
     if (jsTypeObject instanceof JsType) {
       for (final JsTypeObject jso : ((JsType) jsTypeObject).getTypeList()) {
-        if (isMultiTypeParam(jso)) {
+        if (isTypeList(jso)) {
           return true;
         }
       }
@@ -181,17 +207,17 @@ class JsMethodSplitser {
     return splitParams;
   }
 
-  private List<JsTypeObject> getTypes(final JsTypeObject jsParamType) {
+  private List<JsTypeObject> getTypes(final JsTypeObject jsType) {
     final List<JsTypeObject> types = new ArrayList<>();
-    if (jsParamType instanceof JsType) {
-      types.addAll(getJsType((JsType) jsParamType));
-    } else if (jsParamType instanceof JsTypeList) {
-      types.addAll(getJsTypeList(((JsTypeList) jsParamType).getTypes()));
-    } else if (jsParamType == null) {
+    if (jsType instanceof JsType) {
+      types.addAll(getJsType((JsType) jsType));
+    } else if (jsType instanceof JsTypeList) {
+      types.addAll(getJsTypeList(((JsTypeList) jsType).getTypes()));
+    } else if (jsType == null) {
       throw new NullPointerException("jsParamType may not be null.");
     } else {
       throw new IllegalArgumentException("Instance of JsTypeObject '"
-          + jsParamType.getClass().getName() + "' not supported");
+          + jsType.getClass().getName() + "' not supported");
     }
     return types;
   }
@@ -270,14 +296,22 @@ class JsMethodSplitser {
       final JsMethod method = jsMethod.clone();
       method.getElement().setReturn(type);
       try {
-        method.setMethodName(method.getMethodName()
-            + PrintUtil.firstCharUpper(((JsType)type).getName()));
+        method.setMethodName(method.getMethodName() + deriveTypeName(type));
       } catch (final StringIndexOutOfBoundsException e) {
-        LOG.error("What? {}", returnValue, e);
+        LOG.error("splitMultiReturn empty?: '{}'", returnValue, e);
         throw e;
       }
       methods.add(method);
     }
     return methods;
+  }
+
+  private String deriveTypeName(final JsTypeObject type) {
+    return PrintUtil.firstCharUpper(string2TypeName(((JsType)type).getName()));
+  }
+
+  private String string2TypeName(final String value) {
+    final int idx = value.lastIndexOf('.');
+    return idx < 0 ? value : value.substring(idx + 1);
   }
 }

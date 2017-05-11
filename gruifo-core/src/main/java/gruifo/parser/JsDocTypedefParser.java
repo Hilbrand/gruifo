@@ -49,7 +49,7 @@ class JsDocTypedefParser {
     if (lines[i].contains("{{")) {
       i = parseTypeClass(doc, lines, i, fileName);
     } else {
-      doc.setTypeDef(null);
+      doc.setTypeDef(doc.getTypeDef());
       doc.setExtends(jsTypeParser.parseType(
           findValues(lines[i], TYPE_DEF__RETURN_PATTERN)));
     }
